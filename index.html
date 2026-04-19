@@ -9,7 +9,7 @@
 
 <!-- ═══ FIREBASE SDK ═══ -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { initializeApp } from "firebase/app";
 import { getDatabase, ref, onValue, set, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -29,7 +29,7 @@ const FB_PATH = "adc/v1";   // all data lives at this path in the DB
 let firebaseApp, db, fbEnabled = false;
 
 try {
-  firebaseApp = initializeApp(FIREBASE_CONFIG);
+  const app = initializeApp(firebaseConfig);
   db = getDatabase(firebaseApp);
   fbEnabled = FIREBASE_CONFIG.apiKey !== "YOUR_API_KEY";
 } catch(e) {
