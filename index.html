@@ -16,16 +16,14 @@ import { getDatabase, ref, onValue, set, get } from "https://www.gstatic.com/fir
 // FIREBASE CONFIG — Replace these values with your own Firebase project config
 // Instructions to get these values are at the bottom of this file
 // ─────────────────────────────────────────────────────────────────────────────
-const FIREBASE_CONFIG = {
-   apiKey: "AIzaSyBgUIXA40BKk9xtIHl1UyDxhc7Qw8rqotA",
-  authDomain: "ayesha-dental-clinic-database.firebaseapp.com",
-  databaseURL: "https://ayesha-dental-clinic-database-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "ayesha-dental-clinic-database",
-  storageBucket: "ayesha-dental-clinic-database.firebasestorage.app",
-  messagingSenderId: "895822539232",
-  appId: "1:895822539232:web:03223cec4715750f6de385"
-};
-
+const firebaseConfig = {
+  apiKey: "AIzaSyAyqHTEphUNEnUGr6dgivW3JDf14LgNbHc",
+  authDomain: "ayesha-dental-clinic.firebaseapp.com",
+  projectId: "ayesha-dental-clinic",
+  storageBucket: "ayesha-dental-clinic.firebasestorage.app",
+  messagingSenderId: "1091988767765",
+  appId: "1:1091988767765:web:e4e0ea9daadf30d65e3a1c"
+}
 const FB_PATH = "adc/v1";   // all data lives at this path in the DB
 let firebaseApp, db, fbEnabled = false;
 
