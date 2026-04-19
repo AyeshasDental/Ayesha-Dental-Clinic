@@ -9,14 +9,13 @@
 
 <!-- ═══ FIREBASE SDK ═══ -->
 <script type="module">
-import { initializeApp } from "firebase/app";
-import { getDatabase, ref, onValue, set, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
 
-// ─────────────────────────────────────────────────────────────────────────────
-// FIREBASE CONFIG — Replace these values with your own Firebase project config
-// Instructions to get these values are at the bottom of this file
-// ─────────────────────────────────────────────────────────────────────────────
- const firebaseConfig = {
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
     apiKey: "AIzaSyBgUIXA40BKk9xtIHl1UyDxhc7Qw8rqotA",
     authDomain: "ayesha-dental-clinic-database.firebaseapp.com",
     databaseURL: "https://ayesha-dental-clinic-database-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -25,7 +24,9 @@ import { getDatabase, ref, onValue, set, get } from "https://www.gstatic.com/fir
     messagingSenderId: "895822539232",
     appId: "1:895822539232:web:03223cec4715750f6de385"
   };
-const FB_PATH = "adc/v1";   // all data lives at this path in the DB
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
 let firebaseApp, db, fbEnabled = false;
 
 try {
