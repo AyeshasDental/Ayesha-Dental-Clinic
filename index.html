@@ -7,11 +7,15 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 
-<!-- ═══ FIREBASE SDK v10.12.0 (stable, matches your imports) ═══ -->
+<!-- ═══ FIREBASE SDK ═══ -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, onValue, set, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
+// ─────────────────────────────────────────────────────────────────────────────
+// FIREBASE CONFIG — Replace these values with your own Firebase project config
+// Instructions to get these values are at the bottom of this file
+// ─────────────────────────────────────────────────────────────────────────────
 const FIREBASE_CONFIG = {
   apiKey:            "AIzaSyBW5cg6Q8KgpArkSxu5jAD8A1DnVgZNE2Q",
   authDomain:        "ayesha-dental-clinicmanagement.firebaseapp.com",
@@ -50,7 +54,6 @@ window.__fb = {
   async save(data) {
     try {
       await set(ref(db, FB_PATH), data);
-      console.log("💾 Firebase save: OK");
     } catch(e) {
       console.error("FB save error:", e);
     }
@@ -58,10 +61,7 @@ window.__fb = {
 
   subscribe(callback) {
     const unsubscribe = onValue(ref(db, FB_PATH), snap => {
-      if(snap.exists()) {
-        console.log("🔄 Firebase realtime update received");
-        callback(snap.val());
-      }
+      if(snap.exists()) callback(snap.val());
     }, err => {
       console.error("FB subscribe error:", err);
     });
@@ -81,55 +81,111 @@ select option{background:#0b1520}
 input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 input[type=color]{padding:0;border:none;border-radius:6px;cursor:pointer}
 #root{height:100%}
+
+/* Print iframe (hidden) */
 #print-frame{position:fixed;left:-9999px;top:-9999px;width:800px;height:600px;border:none}
+
+/* Sync indicator */
 @keyframes spin{to{transform:rotate(360deg)}}
 .syncing{animation:spin .8s linear infinite}
+
+/* Toast — above bottom nav on mobile */
 #toast{position:fixed;bottom:1.5rem;right:1rem;z-index:9999;display:flex;flex-direction:column;gap:.4rem;pointer-events:none}
 .toast-item{background:#0d3a22;border:1px solid #38c878;color:#38c878;padding:.55rem 1rem;border-radius:10px;font-size:.8rem;font-weight:600;transition:opacity .3s;box-shadow:0 4px 20px rgba(0,0,0,.4)}
 .toast-item.err{background:#3a0d0d;border-color:#d95050;color:#d95050}
+
+/* Checkbox styling */
 input[type=checkbox]{accent-color:#14508a;width:15px;height:15px;cursor:pointer}
-@media print{body{background:#fff!important;color:#111!important}.no-print{display:none!important}}
+
+/* Print styles */
+@media print{
+  body{background:#fff!important;color:#111!important}
+  .no-print{display:none!important}
+}
+
+/* ── MOBILE OVERLAY SIDEBAR ── */
 .mob-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;opacity:0;transition:opacity .22s}
 .mob-overlay.open{opacity:1}
 .sidebar{transition:transform .22s cubic-bezier(.4,0,.2,1)}
+
+/* ── BOTTOM NAV (mobile only) ── */
 .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:150;background:#070f1a;border-top:1px solid #1e3650;padding:0;height:58px;align-items:stretch}
 .bottom-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:none;color:#4a7090;cursor:pointer;font-size:.6rem;font-weight:600;padding:4px 2px;transition:color .15s;-webkit-tap-highlight-color:transparent}
 .bottom-nav-item.active{color:#4a90d9}
 .bottom-nav-item svg{flex-shrink:0}
 .bnav-more{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:none;color:#4a7090;cursor:pointer;font-size:.6rem;font-weight:600;padding:4px 2px;-webkit-tap-highlight-color:transparent}
-.mob-header{display:none;align-items:center;justify-content:space-between;padding:.7rem 1rem;background:#070f1a;border-bottom:1px solid #1e3650;position:sticky;top:0;z-index:100;height:52px}
-.mob-header-title{color:#e0f0fc;font-size:.95rem;font-weight:700}
+
+/* ── MOBILE HEADER — hidden on desktop ── */
+.mob-header{display:none;align-items:center;justify-content:space-between;padding:.7rem 1rem;background:#070f1a;border-bottom:1px solid #1e3650;position:sticky;top:0;z-index:100;height:52px;flex-shrink:0}
+.mob-header-title{fontFamily:"'Cormorant Garamond',serif";color:#e0f0fc;font-size:.95rem;font-weight:700}
+
+/* ── RESPONSIVE MEDIA QUERIES ── */
 @media(max-width:768px){
+  /* Show mobile chrome */
   .mob-header{display:flex}
   .bottom-nav{display:flex}
   .mob-overlay{display:block}
+
+  /* Hide desktop sidebar */
   .sidebar-desktop{display:none!important}
-  .sidebar-mobile{position:fixed;left:0;top:0;bottom:0;width:240px;z-index:300;background:#070f1a;border-right:1px solid #1e3650;transform:translateX(-100%);transition:transform .22s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;height:100vh;overflow-y:auto}
+
+  /* Mobile sidebar is a drawer from left */
+  .sidebar-mobile{
+    position:fixed;left:0;top:0;bottom:0;width:240px;z-index:300;
+    background:#070f1a;border-right:1px solid #1e3650;
+    transform:translateX(-100%);transition:transform .22s cubic-bezier(.4,0,.2,1);
+    display:flex;flex-direction:column;height:100vh;overflow-y:auto
+  }
   .sidebar-mobile.open{transform:translateX(0)}
+
+  /* Toast above bottom nav */
   #toast{bottom:70px}
-  .main-content{padding:.9rem .9rem 72px!important;max-height:unset!important;margin-left:0!important}
+
+  /* Main content fills screen, padded for bottom nav */
+  .main-content{
+    padding:.9rem .9rem 72px!important;
+    max-height:unset!important;
+    overflow-y:auto!important
+  }
+
+  /* Responsive grids */
   .grid-4{grid-template-columns:1fr 1fr!important}
   .grid-3{grid-template-columns:1fr 1fr!important}
   .grid-2{grid-template-columns:1fr!important}
   .grid-chart{grid-template-columns:1fr!important}
   .grid-auto{grid-template-columns:1fr!important}
   .hide-mobile{display:none!important}
+
+  /* Modals full-screen on mobile */
   .modal-box{max-width:100%!important;max-height:100vh!important;border-radius:18px 18px 0 0!important;margin-top:auto}
   .modal-wrap{align-items:flex-end!important;padding:0!important}
+
+  /* Stat cards smaller text */
   .stat-value{font-size:1.1rem!important}
+
+  /* Card list items stack better */
   .card-row{flex-direction:column!important;align-items:flex-start!important;gap:.6rem!important}
   .card-row-actions{width:100%;justify-content:flex-end}
+
+  /* Tables scroll horizontally */
   .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+  /* Form inputs full width */
   .form-grid{grid-template-columns:1fr!important}
+
+  /* Line items compact on mobile */
   .lineitems-grid{grid-template-columns:2fr 1fr 1fr 1fr 24px!important}
 }
+
 @media(max-width:400px){
   .grid-4{grid-template-columns:1fr 1fr!important}
   .stat-value{font-size:1rem!important}
   .bottom-nav-item{font-size:.55rem}
 }
+
+/* Smooth tap on touch */
 button,a{-webkit-tap-highlight-color:transparent}
-input,select,textarea{font-size:16px!important}
+input,select,textarea{font-size:16px!important} /* Prevents iOS zoom */
 @media(min-width:769px){input,select,textarea{font-size:.86rem!important}}
 </style>
 </head>
@@ -138,6 +194,7 @@ input,select,textarea{font-size:16px!important}
 <iframe id="print-frame"></iframe>
 <div id="toast"></div>
 
+<!-- React + Babel -->
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -145,6 +202,9 @@ input,select,textarea{font-size:16px!important}
 <script type="text/babel" data-presets="react">
 const {useState,useEffect,useRef,useCallback,useMemo}=React;
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// TOAST HELPER
+// ═══════════════════════════════════════════════════════════════════════════════
 function showToast(msg, isErr=false){
   const el=document.createElement('div');
   el.className='toast-item'+(isErr?' err':'');
@@ -153,6 +213,9 @@ function showToast(msg, isErr=false){
   setTimeout(()=>{el.style.opacity='0';setTimeout(()=>el.remove(),400)},3000);
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// SEED DATA
+// ═══════════════════════════════════════════════════════════════════════════════
 const today=()=>new Date().toISOString().split('T')[0];
 const uid=p=>`${p}-${Date.now().toString(36).toUpperCase().slice(-5)}`;
 const fmtPKR=n=>`Rs. ${Number(n||0).toLocaleString('en-PK')}`;
@@ -227,6 +290,9 @@ const SEED={
   ],
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// ICONS
+// ═══════════════════════════════════════════════════════════════════════════════
 const IC={
   dash:<><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></>,
   patients:<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></>,
@@ -253,7 +319,7 @@ const IC={
   tooth:<path d="M12 2C8.5 2 5 4.5 5 8c0 2.5 1 4.5 1.5 7S8 22 10 22c1.5 0 2-2 2-2s.5 2 2 2c2 0 3-5 3.5-7S19 10.5 19 8c0-3.5-3.5-6-7-6z"/>,
   menu:<><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></>,
   wifi:<><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></>,
-  wifioff:<><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.56 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></>,
+  wifioff:<><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a11 11 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.56 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></>,
   check:<><polyline points="20 6 9 17 4 12"/></>,
   alert:<><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></>,
   camera:<><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></>,
@@ -262,10 +328,15 @@ const IC={
   sync:<><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></>,
   download:<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></>,
   upload:<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></>,
+  wifi:<><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></>,
+  wifioff:<><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.56 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></>,
   key:<><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></>,
 };
 const Icon=({n,s=16})=><svg width={s} height={s} fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">{IC[n]}</svg>;
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// SHARED COMPONENTS
+// ═══════════════════════════════════════════════════════════════════════════════
 const Modal=({title,onClose,children,wide,extraWide})=>(
   <div className="modal-wrap" style={{position:'fixed',inset:0,background:'rgba(0,0,0,.7)',zIndex:3000,display:'flex',alignItems:'flex-start',justifyContent:'center',padding:'1.5rem 1rem',overflowY:'auto'}}>
     <div className="modal-box" style={{background:'#0b1520',border:'1px solid #1e3650',borderRadius:18,width:'100%',maxWidth:extraWide?980:wide?700:580,boxShadow:'0 32px 80px rgba(0,0,0,.7)',flexShrink:0}}>
@@ -285,7 +356,7 @@ const Btn=({children,icon,ghost,sm,danger,success,onClick,full,disabled,style:sx
   </button>
 );
 
-const FI=({label,type='text',value,onChange,required,placeholder,readOnly})=>(
+const FI=({label,type='text',value,onChange,required,placeholder,readOnly,half})=>(
   <div style={{marginBottom:'0.82rem'}}>
     {label&&<label style={{display:'block',color:'#4a7090',fontSize:'.69rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:5}}>{label}{required&&' *'}</label>}
     <input type={type} value={value||''} onChange={e=>onChange&&onChange(e.target.value)} placeholder={placeholder} readOnly={readOnly}
@@ -337,11 +408,19 @@ const Badge=({status})=>{
 
 const G2=({children,style:sx})=><div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0 .75rem',...sx}}>{children}</div>;
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// PRINT ENGINE — uses hidden iframe to avoid popup blockers
+// ═══════════════════════════════════════════════════════════════════════════════
 function doPrint(htmlContent){
   const frame=document.getElementById('print-frame');
   const doc=frame.contentDocument||frame.contentWindow.document;
-  doc.open();doc.write(htmlContent);doc.close();
-  frame.contentWindow.onload=()=>{setTimeout(()=>frame.contentWindow.print(),400)};
+  doc.open();
+  doc.write(htmlContent);
+  doc.close();
+  // Wait for images to load then print
+  frame.contentWindow.onload=()=>{
+    setTimeout(()=>frame.contentWindow.print(),400);
+  };
   setTimeout(()=>frame.contentWindow.print(),800);
 }
 
@@ -354,50 +433,179 @@ function buildPrintHtml(type,doc,db){
   const sp=db.suppliers?.find(x=>x.id===doc.supplierId);
   const dr=db.doctors?.find(d=>d.id===doc.doctorId);
   const entity=pt||sp;
-  const logoHtml=s.showLogoOnDocs&&s.logo?`<img src="${s.logo}" style="height:55px;object-fit:contain;border-radius:6px"/>`:
-    `<div style="width:55px;height:55px;background:${ac};border-radius:10px;display:inline-flex;align-items:center;justify-content:center;color:white;font-size:22px;font-weight:bold;font-family:Georgia,serif">${(s.clinicName||'A').charAt(0)}</div>`;
-  const css=`*{box-sizing:border-box;margin:0;padding:0}body{font-family:Georgia,serif;color:#111;background:#fff}table{width:100%;border-collapse:collapse;margin:14px 0}th{background:#f0f5fb;padding:8px 11px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#444;border-bottom:2px solid #dde5ef}td{padding:8px 11px;border-bottom:1px solid #edf1f6;font-size:13px}.amt{text-align:right}.tr-total td{font-weight:700;font-size:14px;background:#f8fbff;border-top:2px solid #ccd5e0}.footer{margin-top:40px;text-align:center;color:#888;font-size:11px;border-top:1px solid #e0e5ea;padding-top:14px}.badge-paid,.badge-partial,.badge-unpaid{padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700}.badge-paid{color:#1a7340;background:#e0f4ea}.badge-partial{color:#7a4d00;background:#fff3e0}.badge-unpaid{color:#8b0000;background:#fde8e8}@media print{body{padding:0!important}.no-print{display:none}}`;
+
+  const logoHtml=s.showLogoOnDocs&&s.logo
+    ?`<img src="${s.logo}" style="height:55px;object-fit:contain;border-radius:6px"/>`
+    :`<div style="width:55px;height:55px;background:${ac};border-radius:10px;display:inline-flex;align-items:center;justify-content:center;color:white;font-size:22px;font-weight:bold;font-family:Georgia,serif">${(s.clinicName||'A').charAt(0)}</div>`;
+
+  const css=`*{box-sizing:border-box;margin:0;padding:0}body{font-family:Georgia,serif;color:#111;background:#fff}
+    table{width:100%;border-collapse:collapse;margin:14px 0}
+    th{background:#f0f5fb;padding:8px 11px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#444;border-bottom:2px solid #dde5ef}
+    td{padding:8px 11px;border-bottom:1px solid #edf1f6;font-size:13px}
+    .amt{text-align:right}.tr-total td{font-weight:700;font-size:14px;background:#f8fbff;border-top:2px solid #ccd5e0}
+    .footer{margin-top:40px;text-align:center;color:#888;font-size:11px;border-top:1px solid #e0e5ea;padding-top:14px}
+    .badge-paid,.badge-partial,.badge-unpaid{padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700}
+    .badge-paid{color:#1a7340;background:#e0f4ea}.badge-partial{color:#7a4d00;background:#fff3e0}.badge-unpaid{color:#8b0000;background:#fde8e8}
+    @media print{body{padding:0!important}.no-print{display:none}}`;
+
   let billToHtml='';
   if(entity) billToHtml=`<div style="margin-bottom:18px;padding:12px 14px;background:#f8f9fb;border-radius:8px;font-size:13px"><strong>${type==='bill'?'Supplier':'Bill To'}:</strong><br/><strong style="font-size:15px">${entity.name||'—'}</strong>${entity.phone?`<br/>${entity.phone}`:''}${entity.address?`<br/>${entity.address}`:''}${dr?`<br/>Doctor: ${dr.name}`:''}</div>`;
+
   let itemsHtml='';
-  if(doc.items?.length){itemsHtml=`<table><thead><tr><th>#</th><th>Description</th><th>Qty</th><th>Rate</th><th class="amt">Amount</th></tr></thead><tbody>${doc.items.map((it,i)=>`<tr><td>${i+1}</td><td>${it.desc||''}</td><td>${it.qty}</td><td>${fmtPKR(it.rate)}</td><td class="amt"><strong>${fmtPKR(Number(it.qty)*Number(it.rate))}</strong></td></tr>`).join('')}</tbody></table>`;}
+  if(doc.items?.length){
+    itemsHtml=`<table><thead><tr><th>#</th><th>Description</th><th>Qty</th><th>Rate</th><th class="amt">Amount</th></tr></thead><tbody>
+      ${doc.items.map((it,i)=>`<tr><td>${i+1}</td><td>${it.desc||''}</td><td>${it.qty}</td><td>${fmtPKR(it.rate)}</td><td class="amt"><strong>${fmtPKR(Number(it.qty)*Number(it.rate))}</strong></td></tr>`).join('')}
+    </tbody></table>`;
+  }
+
   let totalsHtml='';
-  if(doc.amount!=null){totalsHtml=`<div style="border:2px solid #111;border-radius:10px;padding:20px;text-align:center;margin:18px 0"><div style="font-size:32px;font-weight:800;color:#1a7340;font-family:Georgia,serif">${fmtPKR(doc.amount)}</div><div style="color:#555;margin-top:4px;font-size:13px">Amount Received · ${doc.method||''}</div></div>`;}
-  else if(doc.total!=null){const bal=doc.total-(doc.paid||0);totalsHtml=`<div style="display:flex;justify-content:flex-end;margin-top:8px"><table style="width:260px;margin:0"><tbody>${doc.subtotal!=null?`<tr><td>Subtotal</td><td class="amt">${fmtPKR(doc.subtotal)}</td></tr>`:''}${doc.tax?`<tr><td>${s.taxLabel||'Tax'}</td><td class="amt">${fmtPKR(doc.tax)}</td></tr>`:''}${doc.discount?`<tr><td>Discount</td><td class="amt">- ${fmtPKR(doc.discount)}</td></tr>`:''}<tr class="tr-total"><td>TOTAL</td><td class="amt">${fmtPKR(doc.total)}</td></tr>${doc.paid!=null?`<tr><td>Paid</td><td class="amt" style="color:#1a7340"><strong>${fmtPKR(doc.paid)}</strong></td></tr>`:''}${bal>0?`<tr class="tr-total"><td>Balance Due</td><td class="amt" style="color:#8b0000">${fmtPKR(bal)}</td></tr>`:''}</tbody></table></div>`;}
+  if(doc.amount!=null){
+    totalsHtml=`<div style="border:2px solid #111;border-radius:10px;padding:20px;text-align:center;margin:18px 0"><div style="font-size:32px;font-weight:800;color:#1a7340;font-family:Georgia,serif">${fmtPKR(doc.amount)}</div><div style="color:#555;margin-top:4px;font-size:13px">Amount Received · ${doc.method||''}</div></div>`;
+  } else if(doc.total!=null){
+    const bal=doc.total-(doc.paid||0);
+    totalsHtml=`<div style="display:flex;justify-content:flex-end;margin-top:8px"><table style="width:260px;margin:0"><tbody>
+      ${doc.subtotal!=null?`<tr><td>Subtotal</td><td class="amt">${fmtPKR(doc.subtotal)}</td></tr>`:''}
+      ${doc.tax?`<tr><td>${s.taxLabel||'Tax'}</td><td class="amt">${fmtPKR(doc.tax)}</td></tr>`:''}
+      ${doc.discount?`<tr><td>Discount</td><td class="amt">- ${fmtPKR(doc.discount)}</td></tr>`:''}
+      <tr class="tr-total"><td>TOTAL</td><td class="amt">${fmtPKR(doc.total)}</td></tr>
+      ${doc.paid!=null?`<tr><td>Paid</td><td class="amt" style="color:#1a7340"><strong>${fmtPKR(doc.paid)}</strong></td></tr>`:''}
+      ${bal>0?`<tr class="tr-total"><td>Balance Due</td><td class="amt" style="color:#8b0000">${fmtPKR(bal)}</td></tr>`:''}
+    </tbody></table></div>`;
+  }
+
   let paymentsHtml='';
-  if(doc.payments?.length){paymentsHtml=`<div style="margin-top:18px"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#666;margin-bottom:6px;font-weight:700">Payment History</div><table><thead><tr><th>Date</th><th>Method</th><th>Note</th><th class="amt">Amount</th></tr></thead><tbody>${doc.payments.map(p=>`<tr><td>${p.date}</td><td>${p.method}</td><td>${p.note||'—'}</td><td class="amt" style="color:#1a7340;font-weight:700">${fmtPKR(p.amount)}</td></tr>`).join('')}</tbody></table></div>`;}
-  const headerClinic=`<div style="display:flex;gap:14px;align-items:center">${logoHtml}<div><div style="font-size:21px;font-weight:bold;color:${ac};font-family:Georgia,serif">${s.clinicName||''}</div>${s.tagline?`<div style="color:#666;font-size:12px">${s.tagline}</div>`:''}<div style="color:#666;font-size:12px">${[s.phone,s.email].filter(Boolean).join(' · ')}</div>${s.address?`<div style="color:#666;font-size:12px">${s.address}</div>`:''}</div></div>`;
-  const headerDoc=`<div style="text-align:right"><div style="font-size:26px;font-weight:800;color:${ac};font-family:Georgia,serif">${doc.id||type.toUpperCase()}</div><div style="color:#666;font-size:12px;margin-top:3px">Date: ${doc.date}</div>${doc.dueDate?`<div style="color:#666;font-size:12px">Due: ${doc.dueDate}</div>`:''}${doc.status?`<div style="margin-top:6px"><span class="badge-${doc.status}">${doc.status}</span></div>`:''}</div>`;
+  if(doc.payments?.length){
+    paymentsHtml=`<div style="margin-top:18px"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#666;margin-bottom:6px;font-weight:700">Payment History</div>
+      <table><thead><tr><th>Date</th><th>Method</th><th>Note</th><th class="amt">Amount</th></tr></thead><tbody>
+      ${doc.payments.map(p=>`<tr><td>${p.date}</td><td>${p.method}</td><td>${p.note||'—'}</td><td class="amt" style="color:#1a7340;font-weight:700">${fmtPKR(p.amount)}</td></tr>`).join('')}
+      </tbody></table></div>`;
+  }
+
+  const headerClinic=`<div style="display:flex;gap:14px;align-items:center">${logoHtml}<div>
+    <div style="font-size:21px;font-weight:bold;color:${ac};font-family:Georgia,serif">${s.clinicName||''}</div>
+    ${s.tagline?`<div style="color:#666;font-size:12px">${s.tagline}</div>`:''}
+    <div style="color:#666;font-size:12px">${[s.phone,s.email].filter(Boolean).join(' · ')}</div>
+    ${s.address?`<div style="color:#666;font-size:12px">${s.address}</div>`:''}
+  </div></div>`;
+
+  const headerDoc=`<div style="text-align:right">
+    <div style="font-size:26px;font-weight:800;color:${ac};font-family:Georgia,serif">${doc.id||type.toUpperCase()}</div>
+    <div style="color:#666;font-size:12px;margin-top:3px">Date: ${doc.date}</div>
+    ${doc.dueDate?`<div style="color:#666;font-size:12px">Due: ${doc.dueDate}</div>`:''}
+    ${doc.status?`<div style="margin-top:6px"><span class="badge-${doc.status}">${doc.status}</span></div>`:''}
+  </div>`;
+
   let body='';
-  if(layout==='modern'){body=`<div style="background:${ac};color:white;padding:24px 32px;display:flex;justify-content:space-between;align-items:center">${s.showLogoOnDocs&&s.logo?`<img src="${s.logo}" style="height:44px;object-fit:contain;border-radius:6px;background:white;padding:3px"/>`:``}<div><div style="font-size:19px;font-weight:bold">${s.clinicName}</div><div style="opacity:.8;font-size:11px">${s.address||''}</div></div><div style="text-align:right"><div style="font-size:26px;font-weight:800;opacity:.9">${doc.id||''}</div><div style="opacity:.8;font-size:11px">Date: ${doc.date}</div></div></div><div style="padding:24px 32px">${billToHtml}${itemsHtml}${totalsHtml}${paymentsHtml}${doc.notes?`<p style="color:#555;font-size:12px;margin-top:12px">Notes: ${doc.notes}</p>`:''}</div>`;}
-  else if(layout==='minimal'){body=`<div style="padding:28px;max-width:620px;margin:auto"><div style="margin-bottom:18px"><div style="font-size:17px;font-weight:bold">${s.clinicName}</div><div style="color:#666;font-size:11px">${s.address||''}</div></div><div style="display:flex;justify-content:space-between;border-bottom:2px solid #111;padding-bottom:12px;margin-bottom:18px"><div style="font-size:22px;font-weight:800">${type.toUpperCase()}</div><div style="font-size:12px;color:#555"><div>${doc.id||''}</div><div>Date: ${doc.date}</div></div></div>${billToHtml}${itemsHtml}${totalsHtml}${paymentsHtml}</div>`;}
-  else{body=`<div style="padding:28px"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:16px;border-bottom:3px solid ${ac}">${headerClinic}${headerDoc}</div>${billToHtml}${itemsHtml}${totalsHtml}${paymentsHtml}${doc.notes?`<p style="color:#555;font-size:12px;margin-top:12px">Notes: ${doc.notes}</p>`:''}</div>`;}
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>${type} ${doc.id||''}</title><style>${css}</style></head><body>${body}<div class="footer" style="padding:14px 28px 28px">${footer||''}<br/>Generated on ${new Date().toLocaleString()}</div></body></html>`;
+  if(layout==='modern'){
+    body=`<div style="background:${ac};color:white;padding:24px 32px;display:flex;justify-content:space-between;align-items:center">
+      ${s.showLogoOnDocs&&s.logo?`<img src="${s.logo}" style="height:44px;object-fit:contain;border-radius:6px;background:white;padding:3px"/>`:``}
+      <div><div style="font-size:19px;font-weight:bold">${s.clinicName}</div><div style="opacity:.8;font-size:11px">${s.address||''}</div></div>
+      <div style="text-align:right"><div style="font-size:26px;font-weight:800;opacity:.9">${doc.id||''}</div><div style="opacity:.8;font-size:11px">Date: ${doc.date}</div></div>
+    </div>
+    <div style="padding:24px 32px">${billToHtml}${itemsHtml}${totalsHtml}${paymentsHtml}${doc.notes?`<p style="color:#555;font-size:12px;margin-top:12px">Notes: ${doc.notes}</p>`:''}</div>`;
+  } else if(layout==='minimal'){
+    body=`<div style="padding:28px;max-width:620px;margin:auto"><div style="margin-bottom:18px"><div style="font-size:17px;font-weight:bold">${s.clinicName}</div><div style="color:#666;font-size:11px">${s.address||''}</div></div>
+    <div style="display:flex;justify-content:space-between;border-bottom:2px solid #111;padding-bottom:12px;margin-bottom:18px">
+      <div style="font-size:22px;font-weight:800">${type.toUpperCase()}</div>
+      <div style="font-size:12px;color:#555"><div>${doc.id||''}</div><div>Date: ${doc.date}</div></div>
+    </div>${billToHtml}${itemsHtml}${totalsHtml}${paymentsHtml}</div>`;
+  } else {
+    // classic
+    body=`<div style="padding:28px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:16px;border-bottom:3px solid ${ac}">${headerClinic}${headerDoc}</div>
+      ${billToHtml}${itemsHtml}${totalsHtml}${paymentsHtml}
+      ${doc.notes?`<p style="color:#555;font-size:12px;margin-top:12px">Notes: ${doc.notes}</p>`:''}
+    </div>`;
+  }
+
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>${type} ${doc.id||''}</title><style>${css}</style></head><body>
+    ${body}
+    <div class="footer" style="padding:14px 28px 28px">${footer||''}<br/>Generated on ${new Date().toLocaleString()}</div>
+  </body></html>`;
 }
 
-function printDoc(type,doc,db){doPrint(buildPrintHtml(type,doc,db));}
+function printDoc(type,doc,db){
+  doPrint(buildPrintHtml(type,doc,db));
+}
 
 function printExpense(exp,db){
-  const s=db.settings||SEED.settings;const ac=s.invoiceColor||'#1565a0';
-  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Expense ${exp.id}</title><style>*{box-sizing:border-box}body{font-family:Georgia,serif;padding:28px;color:#111;max-width:540px;margin:auto}.header{font-size:19px;font-weight:bold;color:${ac};margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid ${ac}}table{width:100%;border-collapse:collapse}td{padding:9px 8px;border-bottom:1px solid #eee;font-size:13px}td:first-child{color:#555;font-size:11px;text-transform:uppercase;width:140px}.footer{margin-top:28px;text-align:center;color:#888;font-size:11px;border-top:1px solid #ddd;padding-top:14px}@media print{body{padding:0}}</style></head><body><div class="header">${s.clinicName} — Expense Record</div><table><tr><td>Expense ID</td><td><strong>${exp.id}</strong></td></tr><tr><td>Date</td><td>${exp.date}</td></tr><tr><td>Category</td><td>${exp.category}</td></tr><tr><td>Description</td><td><strong>${exp.description}</strong></td></tr><tr><td>Amount</td><td><strong style="font-size:20px;color:#8b0000">${fmtPKR(exp.amount)}</strong></td></tr><tr><td>Method</td><td>${exp.paymentMethod}</td></tr>${exp.notes?`<tr><td>Notes</td><td>${exp.notes}</td></tr>`:''}</table><div class="footer">Generated ${new Date().toLocaleString()}</div></body></html>`;
+  const s=db.settings||SEED.settings;
+  const ac=s.invoiceColor||'#1565a0';
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Expense ${exp.id}</title>
+    <style>*{box-sizing:border-box}body{font-family:Georgia,serif;padding:28px;color:#111;max-width:540px;margin:auto}
+    .header{font-size:19px;font-weight:bold;color:${ac};margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid ${ac}}
+    table{width:100%;border-collapse:collapse}td{padding:9px 8px;border-bottom:1px solid #eee;font-size:13px}td:first-child{color:#555;font-size:11px;text-transform:uppercase;width:140px}
+    .footer{margin-top:28px;text-align:center;color:#888;font-size:11px;border-top:1px solid #ddd;padding-top:14px}@media print{body{padding:0}}</style>
+    </head><body>
+    <div class="header">${s.clinicName} — Expense Record</div>
+    <table><tr><td>Expense ID</td><td><strong>${exp.id}</strong></td></tr>
+    <tr><td>Date</td><td>${exp.date}</td></tr><tr><td>Category</td><td>${exp.category}</td></tr>
+    <tr><td>Description</td><td><strong>${exp.description}</strong></td></tr>
+    <tr><td>Amount</td><td><strong style="font-size:20px;color:#8b0000">${fmtPKR(exp.amount)}</strong></td></tr>
+    <tr><td>Method</td><td>${exp.paymentMethod}</td></tr>
+    ${exp.notes?`<tr><td>Notes</td><td>${exp.notes}</td></tr>`:''}</table>
+    <div class="footer">Generated ${new Date().toLocaleString()}</div>
+    </body></html>`;
   doPrint(html);
 }
 
 function printPrescription(rx,db){
-  const s=db.settings||SEED.settings;const ac=s.invoiceColor||'#1565a0';
-  const pt=db.patients?.find(p=>p.id===rx.patientId);const dr=db.doctors?.find(d=>d.id===rx.doctorId);
-  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Prescription</title><style>*{box-sizing:border-box}body{font-family:Georgia,serif;padding:32px;color:#111}h2{color:${ac}}table{width:100%;border-collapse:collapse;margin:12px 0}th{background:#f0f5fb;padding:8px;font-size:11px;text-transform:uppercase}td{padding:8px;border-bottom:1px solid #eee;font-size:13px}.footer{margin-top:40px;text-align:center;color:#888;font-size:11px;border-top:1px solid #ddd;padding-top:14px}@media print{body{padding:0}}</style></head><body><div style="display:flex;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:2px solid ${ac}"><div>${s.showLogoOnDocs&&s.logo?`<img src="${s.logo}" style="height:44px;margin-bottom:6px;display:block;border-radius:6px;object-fit:contain"/>`:''}<strong style="font-size:18px;color:${ac}">${s.clinicName}</strong><br/><span style="font-size:11px;color:#666">${s.address||''}</span></div><div style="text-align:right"><div style="font-size:20px;font-weight:bold">℞ Prescription</div><div style="font-size:12px;color:#666">Date: ${rx.date}<br/>Patient: ${pt?.name||'—'}<br/>Doctor: ${dr?.name||'—'}</div></div></div><table><thead><tr><th>Medication</th><th>Dose</th><th>Frequency</th><th>Duration</th></tr></thead><tbody>${rx.medications.map(m=>`<tr><td><strong>${m.name}</strong></td><td>${m.dose}</td><td>${m.frequency}</td><td>${m.duration}</td></tr>`).join('')}</tbody></table>${rx.notes?`<p style="margin-top:12px"><strong>Instructions:</strong> ${rx.notes}</p>`:''} ${rx.nextVisit?`<p><strong>Next Visit:</strong> ${rx.nextVisit}</p>`:''}<div style="margin-top:56px;display:flex;justify-content:flex-end"><div style="text-align:center;border-top:1px solid #555;padding-top:8px;min-width:180px;font-size:12px">Doctor's Signature</div></div><div class="footer">Generated ${new Date().toLocaleString()}</div></body></html>`;
+  const s=db.settings||SEED.settings;
+  const ac=s.invoiceColor||'#1565a0';
+  const pt=db.patients?.find(p=>p.id===rx.patientId);
+  const dr=db.doctors?.find(d=>d.id===rx.doctorId);
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Prescription</title>
+    <style>*{box-sizing:border-box}body{font-family:Georgia,serif;padding:32px;color:#111}
+    h2{color:${ac}}table{width:100%;border-collapse:collapse;margin:12px 0}th{background:#f0f5fb;padding:8px;font-size:11px;text-transform:uppercase}td{padding:8px;border-bottom:1px solid #eee;font-size:13px}
+    .footer{margin-top:40px;text-align:center;color:#888;font-size:11px;border-top:1px solid #ddd;padding-top:14px}@media print{body{padding:0}}</style>
+    </head><body>
+    <div style="display:flex;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:2px solid ${ac}">
+    <div>${s.showLogoOnDocs&&s.logo?`<img src="${s.logo}" style="height:44px;margin-bottom:6px;display:block;border-radius:6px;object-fit:contain"/>`:''}<strong style="font-size:18px;color:${ac}">${s.clinicName}</strong><br/><span style="font-size:11px;color:#666">${s.address||''}</span></div>
+    <div style="text-align:right"><div style="font-size:20px;font-weight:bold">℞ Prescription</div><div style="font-size:12px;color:#666">Date: ${rx.date}<br/>Patient: ${pt?.name||'—'}<br/>Doctor: ${dr?.name||'—'}</div></div></div>
+    <table><thead><tr><th>Medication</th><th>Dose</th><th>Frequency</th><th>Duration</th></tr></thead><tbody>
+    ${rx.medications.map(m=>`<tr><td><strong>${m.name}</strong></td><td>${m.dose}</td><td>${m.frequency}</td><td>${m.duration}</td></tr>`).join('')}
+    </tbody></table>
+    ${rx.notes?`<p style="margin-top:12px"><strong>Instructions:</strong> ${rx.notes}</p>`:''}
+    ${rx.nextVisit?`<p><strong>Next Visit:</strong> ${rx.nextVisit}</p>`:''}
+    <div style="margin-top:56px;display:flex;justify-content:flex-end"><div style="text-align:center;border-top:1px solid #555;padding-top:8px;min-width:180px;font-size:12px">Doctor's Signature</div></div>
+    <div class="footer">Generated ${new Date().toLocaleString()}</div>
+    </body></html>`;
   doPrint(html);
 }
 
 function printPLReport(db){
-  const s=db.settings||SEED.settings;const ac=s.invoiceColor||'#1565a0';
-  const rev=db.invoices.reduce((a,i)=>a+i.paid,0);const cogs=db.bills.reduce((a,b)=>a+b.paid,0);const opex=db.expenses.reduce((a,e)=>a+e.amount,0);
-  const gross=rev-cogs;const net=gross-opex;
-  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>P&L Statement</title><style>body{font-family:Georgia,serif;padding:32px;color:#111}table{width:100%;border-collapse:collapse;margin:10px 0}th{background:#f0f5fb;padding:8px 11px;text-align:left;font-size:11px;text-transform:uppercase}td{padding:8px 11px;border-bottom:1px solid #eee;font-size:13px}.tr-total td{font-weight:700;border-top:2px solid #ccd5e0;font-size:14px;background:#f8fbff}.amt{text-align:right}.footer{margin-top:40px;text-align:center;color:#888;font-size:11px;border-top:1px solid #ddd;padding-top:14px}@media print{body{padding:0}}</style></head><body><div style="display:flex;justify-content:space-between;margin-bottom:24px;padding-bottom:14px;border-bottom:2px solid ${ac}"><strong style="font-size:20px;color:${ac}">${s.clinicName}</strong><div style="text-align:right"><strong style="font-size:16px">Profit & Loss Statement</strong><br/><span style="color:#666;font-size:12px">Generated: ${new Date().toLocaleDateString()}</span></div></div><table><thead><tr><th>Item</th><th class="amt">Amount</th></tr></thead><tbody><tr><td colspan="2"><strong>REVENUE</strong></td></tr><tr><td style="padding-left:20px">Patient Collections</td><td class="amt">${fmtPKR(rev)}</td></tr><tr class="tr-total"><td>Total Revenue</td><td class="amt">${fmtPKR(rev)}</td></tr><tr><td colspan="2"><strong>COST OF GOODS SOLD</strong></td></tr><tr><td style="padding-left:20px">Supplier Bills Paid</td><td class="amt">${fmtPKR(cogs)}</td></tr><tr class="tr-total"><td>Gross Profit</td><td class="amt">${fmtPKR(gross)}</td></tr><tr><td colspan="2"><strong>OPERATING EXPENSES</strong></td></tr>${db.expenses.map(e=>`<tr><td style="padding-left:20px">${e.description}</td><td class="amt">${fmtPKR(e.amount)}</td></tr>`).join('')}<tr class="tr-total"><td>Total Expenses</td><td class="amt">${fmtPKR(opex)}</td></tr><tr class="tr-total" style="font-size:15px"><td>NET PROFIT / (LOSS)</td><td class="amt" style="color:${net>=0?'#1a7340':'#8b0000'}">${fmtPKR(net)}</td></tr></tbody></table><div class="footer">${s.clinicName} · ${new Date().toLocaleString()}</div></body></html>`;
+  const s=db.settings||SEED.settings;
+  const ac=s.invoiceColor||'#1565a0';
+  const rev=db.invoices.reduce((a,i)=>a+i.paid,0);
+  const cogs=db.bills.reduce((a,b)=>a+b.paid,0);
+  const opex=db.expenses.reduce((a,e)=>a+e.amount,0);
+  const gross=rev-cogs; const net=gross-opex;
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>P&L Statement</title>
+    <style>body{font-family:Georgia,serif;padding:32px;color:#111}table{width:100%;border-collapse:collapse;margin:10px 0}th{background:#f0f5fb;padding:8px 11px;text-align:left;font-size:11px;text-transform:uppercase}td{padding:8px 11px;border-bottom:1px solid #eee;font-size:13px}.tr-total td{font-weight:700;border-top:2px solid #ccd5e0;font-size:14px;background:#f8fbff}.amt{text-align:right}.footer{margin-top:40px;text-align:center;color:#888;font-size:11px;border-top:1px solid #ddd;padding-top:14px}@media print{body{padding:0}}</style>
+    </head><body>
+    <div style="display:flex;justify-content:space-between;margin-bottom:24px;padding-bottom:14px;border-bottom:2px solid ${ac}">
+    <strong style="font-size:20px;color:${ac}">${s.clinicName}</strong>
+    <div style="text-align:right"><strong style="font-size:16px">Profit & Loss Statement</strong><br/><span style="color:#666;font-size:12px">Generated: ${new Date().toLocaleDateString()}</span></div></div>
+    <table><thead><tr><th>Item</th><th class="amt">Amount</th></tr></thead><tbody>
+    <tr><td colspan="2"><strong>REVENUE</strong></td></tr>
+    <tr><td style="padding-left:20px">Patient Collections</td><td class="amt">${fmtPKR(rev)}</td></tr>
+    <tr class="tr-total"><td>Total Revenue</td><td class="amt">${fmtPKR(rev)}</td></tr>
+    <tr><td colspan="2"><strong>COST OF GOODS SOLD</strong></td></tr>
+    <tr><td style="padding-left:20px">Supplier Bills Paid</td><td class="amt">${fmtPKR(cogs)}</td></tr>
+    <tr class="tr-total"><td>Gross Profit</td><td class="amt">${fmtPKR(gross)}</td></tr>
+    <tr><td colspan="2"><strong>OPERATING EXPENSES</strong></td></tr>
+    ${db.expenses.map(e=>`<tr><td style="padding-left:20px">${e.description}</td><td class="amt">${fmtPKR(e.amount)}</td></tr>`).join('')}
+    <tr class="tr-total"><td>Total Expenses</td><td class="amt">${fmtPKR(opex)}</td></tr>
+    <tr class="tr-total" style="font-size:15px"><td>NET PROFIT / (LOSS)</td><td class="amt" style="color:${net>=0?'#1a7340':'#8b0000'}">${fmtPKR(net)}</td></tr>
+    </tbody></table>
+    <div class="footer">${s.clinicName} · ${new Date().toLocaleString()}</div>
+    </body></html>`;
   doPrint(html);
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// LINE ITEMS
+// ═══════════════════════════════════════════════════════════════════════════════
 const LineItems=({items,setItems})=>{
   const upd=(i,f,v)=>{const a=[...items];const qty=f==='qty'?Number(v):Number(a[i].qty);const rate=f==='rate'?Number(v):Number(a[i].rate);a[i]={...a[i],[f]:f==='qty'||f==='rate'?Number(v):v,amount:qty*rate};setItems(a);};
   const total=items.reduce((a,x)=>a+(Number(x.qty)*Number(x.rate)||0),0);
@@ -421,9 +629,15 @@ const LineItems=({items,setItems})=>{
   </div>);
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// PAYMENT MODAL
+// ═══════════════════════════════════════════════════════════════════════════════
 const PayModal=({doc,docType,onSave,onClose})=>{
   const bal=doc.total-(doc.paid||0);
-  const[amt,setAmt]=useState(String(bal));const[method,setMethod]=useState('Cash');const[date,setDate]=useState(today());const[note,setNote]=useState('');
+  const[amt,setAmt]=useState(String(bal));
+  const[method,setMethod]=useState('Cash');
+  const[date,setDate]=useState(today());
+  const[note,setNote]=useState('');
   const go=()=>{const a=Number(amt);if(!a||a<=0)return;const newPaid=Math.min((doc.paid||0)+a,doc.total);const status=newPaid>=doc.total?'paid':'partial';const payment={id:uid('PAY'),date,amount:a,method,note};onSave({...doc,paid:newPaid,status,payments:[...(doc.payments||[]),payment]});};
   return(<Modal title={`Record Payment — ${doc.id}`} onClose={onClose}>
     <div style={{background:'#06101a',border:'1px solid #1e3650',borderRadius:12,padding:'1rem',marginBottom:'1.1rem',display:'grid',gridTemplateColumns:'1fr 1fr',gap:'.5rem'}}>
@@ -432,19 +646,26 @@ const PayModal=({doc,docType,onSave,onClose})=>{
         <div style={{color:k==='Balance Due'?'#e85050':'#e0f0fc',fontWeight:700,fontSize:'.88rem'}}>{v}</div></div>
       ))}
     </div>
-    {bal<=0?<div style={{color:'#38c878',textAlign:'center',padding:'1rem',background:'#0b3a22',borderRadius:10}}>✓ Fully paid.</div>
-    :<><FI label="Amount (PKR)" type="number" value={amt} onChange={setAmt} required/>
-      <FI label="Payment Date" type="date" value={date} onChange={setDate}/>
-      <FS label="Payment Method" value={method} onChange={setMethod} options={['Cash','Card','Bank Transfer','Cheque','JazzCash','EasyPaisa']}/>
-      <FI label="Note / Reference" value={note} onChange={setNote} placeholder="Cheque no., transfer ref, etc."/>
-      <Btn full success onClick={go} icon="pay">Record Payment of {fmtPKR(Number(amt)||0)}</Btn>
-    </>}
+    {bal<=0
+      ?<div style={{color:'#38c878',textAlign:'center',padding:'1rem',background:'#0b3a22',borderRadius:10}}>✓ Fully paid.</div>
+      :<><FI label="Amount (PKR)" type="number" value={amt} onChange={setAmt} required/>
+        <FI label="Payment Date" type="date" value={date} onChange={setDate}/>
+        <FS label="Payment Method" value={method} onChange={setMethod} options={['Cash','Card','Bank Transfer','Cheque','JazzCash','EasyPaisa']}/>
+        <FI label="Note / Reference" value={note} onChange={setNote} placeholder="Cheque no., transfer ref, etc."/>
+        <Btn full success onClick={go} icon="pay">Record Payment of {fmtPKR(Number(amt)||0)}</Btn>
+      </>}
   </Modal>);
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// DOCUMENT VIEW MODAL (Invoice / Bill)
+// ═══════════════════════════════════════════════════════════════════════════════
 const DocViewModal=({doc,docType,db,onClose,onPay,onEdit,onDelete,canPay,canEdit})=>{
-  const pt=db.patients?.find(p=>p.id===doc.patientId);const sp=db.suppliers?.find(s=>s.id===doc.supplierId);const dr=db.doctors?.find(d=>d.id===doc.doctorId);
-  const entity=pt||sp;const bal=doc.total-(doc.paid||0);
+  const pt=db.patients?.find(p=>p.id===doc.patientId);
+  const sp=db.suppliers?.find(s=>s.id===doc.supplierId);
+  const dr=db.doctors?.find(d=>d.id===doc.doctorId);
+  const entity=pt||sp;
+  const bal=doc.total-(doc.paid||0);
   return(<Modal title={`${docType==='invoice'?'Invoice':'Bill'} ${doc.id}`} onClose={onClose} wide>
     <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'.45rem',marginBottom:'1rem'}}>
       {[[docType==='invoice'?'Patient':'Supplier',entity?.name||'—'],[docType==='invoice'?'Doctor':'',''],['Date',doc.date],['Due Date',doc.dueDate||'—'],['Status','badge'],['','']].filter(([k])=>k).map(([k,v])=>(
@@ -468,7 +689,8 @@ const DocViewModal=({doc,docType,db,onClose,onPay,onEdit,onDelete,canPay,canEdit
         ))}
       </div>
     </div>
-    {doc.payments?.length>0&&<><div style={{color:'#2e4a60',fontSize:'.66rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:7}}>Payment History</div>
+    {doc.payments?.length>0&&<>
+      <div style={{color:'#2e4a60',fontSize:'.66rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:7}}>Payment History</div>
       <table style={{width:'100%',borderCollapse:'collapse',marginBottom:'1rem'}}>
         <thead><tr>{['Date','Method','Note','Amount'].map(h=><th key={h} style={{color:'#2e4a60',fontSize:'.66rem',textTransform:'uppercase',padding:'.34rem .44rem',textAlign:'left',borderBottom:'1px solid #1e3650'}}>{h}</th>)}</tr></thead>
         <tbody>{doc.payments.map(p=><tr key={p.id}><td style={{color:'#4a7090',padding:'.34rem .44rem',fontSize:'.8rem'}}>{p.date}</td><td style={{color:'#e0f0fc',padding:'.34rem .44rem',fontSize:'.8rem'}}>{p.method}</td><td style={{color:'#4a7090',padding:'.34rem .44rem',fontSize:'.8rem'}}>{p.note||'—'}</td><td style={{color:'#38c878',padding:'.34rem .44rem',fontSize:'.8rem',fontWeight:700}}>{fmtPKR(p.amount)}</td></tr>)}</tbody>
@@ -483,13 +705,18 @@ const DocViewModal=({doc,docType,db,onClose,onPay,onEdit,onDelete,canPay,canEdit
   </Modal>);
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// LOGIN SCREEN
+// ═══════════════════════════════════════════════════════════════════════════════
 const LoginScreen=({db,onLogin,fbStatus})=>{
   const[em,setEm]=useState('');const[pw,setPw]=useState('');const[err,setErr]=useState('');
   const go=()=>{const u=db.users?.find(x=>x.email===em&&x.password===pw&&x.active);if(u)onLogin(u);else setErr('Invalid credentials or account inactive.');};
   return(<div style={{minHeight:'100vh',background:'#040b13',display:'flex',alignItems:'center',justifyContent:'center',padding:'1rem'}}>
     <div style={{width:'100%',maxWidth:400}}>
       <div style={{textAlign:'center',marginBottom:'2rem'}}>
-        <div style={{width:66,height:66,background:'linear-gradient(135deg,#14508a,#0c3060)',borderRadius:20,display:'inline-flex',alignItems:'center',justifyContent:'center',marginBottom:14,boxShadow:'0 8px 32px rgba(20,80,138,.4)'}}><Icon n="tooth" s={32}/></div>
+        <div style={{width:66,height:66,background:'linear-gradient(135deg,#14508a,#0c3060)',borderRadius:20,display:'inline-flex',alignItems:'center',justifyContent:'center',marginBottom:14,boxShadow:'0 8px 32px rgba(20,80,138,.4)'}}>
+          <Icon n="tooth" s={32}/>
+        </div>
         <h1 style={{fontFamily:"'Cormorant Garamond',serif",color:'#e0f0fc',fontSize:'1.9rem',margin:'0 0 4px'}}>{db.settings?.clinicName||'Dental Clinic'}</h1>
         <p style={{color:'#4a7090',margin:0,fontSize:'.85rem'}}>Practice Management System</p>
         <div style={{marginTop:10,display:'inline-flex',alignItems:'center',gap:6,fontSize:'.75rem',color:fbStatus==='online'?'#38c878':fbStatus==='connecting'?'#e8a030':'#4a7090',background:'#090f1a',border:'1px solid #1e3650',borderRadius:20,padding:'3px 10px'}}>
@@ -507,6 +734,9 @@ const LoginScreen=({db,onLogin,fbStatus})=>{
   </div>);
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════════════════════════════════
 const Dashboard=({db})=>{
   const rev=db.invoices.reduce((a,i)=>a+i.paid,0);
   const outstanding=db.invoices.filter(i=>i.status!=='paid').reduce((a,i)=>a+(i.total-i.paid),0);
@@ -543,10 +773,10 @@ const Dashboard=({db})=>{
       <Card>
         <div style={{color:'#4a7090',fontSize:'.67rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:'1rem'}}>Today — {todayAppts.length} Appointments</div>
         {todayAppts.length===0?<div style={{color:'#2e4a60',textAlign:'center',padding:'1.8rem 0',fontSize:'.84rem'}}>No appointments today</div>:
-        todayAppts.map(a=>{const pt=db.patients.find(p=>p.id===a.patientId);return(
+        todayAppts.map(a=>{const pt=db.patients.find(p=>p.id===a.patientId);const dr=db.doctors.find(d=>d.id===a.doctorId);return(
           <div key={a.id} style={{display:'flex',justifyContent:'space-between',padding:'.42rem 0',borderBottom:'1px solid #0d1e2c'}}>
             <div><div style={{color:'#e0f0fc',fontSize:'.83rem',fontWeight:600}}>{pt?.name||'—'}</div><div style={{color:'#4a7090',fontSize:'.7rem'}}>{a.time} · {a.treatment?.substring(0,20)}</div></div>
-            <Badge status={a.status}/>
+            <div style={{textAlign:'right'}}><Badge status={a.status}/></div>
           </div>);})}
       </Card>
     </div>
@@ -561,6 +791,9 @@ const Dashboard=({db})=>{
   </div>);
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// PATIENTS
+// ═══════════════════════════════════════════════════════════════════════════════
 const Patients=({db,setDb,can})=>{
   const[search,setSearch]=useState('');const[modal,setModal]=useState(null);const[view,setView]=useState(null);
   const blank={name:'',age:'',phone:'',email:'',gender:'Male',address:'',bloodGroup:'',photo:null,notes:'',createdAt:today()};
@@ -569,7 +802,7 @@ const Patients=({db,setDb,can})=>{
   const f=db.patients.filter(p=>p.name.toLowerCase().includes(search.toLowerCase())||p.phone.includes(search));
   const save=()=>{if(!form.name||!form.phone)return;const d={...form,age:Number(form.age)};if(editId)setDb(x=>({...x,patients:x.patients.map(p=>p.id===editId?{...d,id:editId}:p)}));else setDb(x=>({...x,patients:[...x.patients,{...d,id:Date.now()}]}));setModal(null);setForm(blank);setEditId(null);};
   const del=id=>{if(window.confirm('Delete patient?'))setDb(x=>({...x,patients:x.patients.filter(p=>p.id!==id)}));};
-  const handlePhoto=e=>{const fi=e.target.files[0];if(!fi)return;const r=new FileReader();r.onload=ev=>setForm(x=>({...x,photo:ev.target.result}));r.readAsDataURL(fi);};
+  const handlePhoto=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>setForm(x=>({...x,photo:ev.target.result}));r.readAsDataURL(f);};
   const vp=view&&db.patients.find(p=>p.id===view);
   return(<div>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.1rem'}}>
@@ -637,6 +870,9 @@ const Patients=({db,setDb,can})=>{
   </div>);
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// APPOINTMENTS
+// ═══════════════════════════════════════════════════════════════════════════════
 const Appointments=({db,setDb,can})=>{
   const[modal,setModal]=useState(false);const[editId,setEditId]=useState(null);
   const[fd,setFd]=useState(today());const[fdr,setFdr]=useState('');
@@ -691,6 +927,9 @@ const Appointments=({db,setDb,can})=>{
   </div>);
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// HISTORY
+// ═══════════════════════════════════════════════════════════════════════════════
 const History=({db,setDb,can})=>{
   const[modal,setModal]=useState(false);const[editId,setEditId]=useState(null);const[fp,setFp]=useState('');
   const blank={patientId:'',doctorId:'',date:today(),treatment:'',notes:'',fee:''};
@@ -732,6 +971,9 @@ const History=({db,setDb,can})=>{
   </div>);
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// PRESCRIPTIONS
+// ═══════════════════════════════════════════════════════════════════════════════
 const Prescriptions=({db,setDb,can})=>{
   const[modal,setModal]=useState(false);const[viewRx,setViewRx]=useState(null);const[editId,setEditId]=useState(null);const[fp,setFp]=useState('');
   const blank={patientId:'',doctorId:'',date:today(),notes:'',nextVisit:'',meds:[{name:'',dose:'',frequency:'',duration:''}]};
@@ -786,8 +1028,8 @@ const Prescriptions=({db,setDb,can})=>{
         {form.meds.map((m,i)=>(
           <div key={i} style={{background:'#060c16',border:'1px solid #1e3650',borderRadius:8,padding:'.62rem',marginBottom:5}}>
             <div style={{display:'grid',gridTemplateColumns:'2fr 1fr 1.5fr 1fr auto',gap:5}}>
-              {[['Drug name','name'],['Dose','dose'],['Frequency','frequency'],['Duration','duration']].map(([ph,fi])=>(
-                <input key={fi} placeholder={ph} value={m[fi]} onChange={e=>updMed(i,fi,e.target.value)}
+              {[['Drug name','name'],['Dose','dose'],['Frequency','frequency'],['Duration','duration']].map(([ph,f])=>(
+                <input key={f} placeholder={ph} value={m[f]} onChange={e=>updMed(i,f,e.target.value)}
                   style={{background:'transparent',border:'none',borderBottom:'1px solid #1e3650',color:'#e0f0fc',padding:'3px 0',outline:'none',fontSize:'.83rem'}}/>
               ))}
               {form.meds.length>1&&<button onClick={()=>setForm(f=>({...f,meds:f.meds.filter((_,j)=>j!==i)}))} style={{background:'none',border:'none',color:'#502020',cursor:'pointer',padding:0,display:'flex',alignItems:'center'}}><Icon n="trash" s={13}/></button>}
@@ -802,6 +1044,9 @@ const Prescriptions=({db,setDb,can})=>{
   </div>);
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// INVOICES
+// ═══════════════════════════════════════════════════════════════════════════════
 const Invoices=({db,setDb,can})=>{
   const[modal,setModal]=useState(false);const[viewDoc,setViewDoc]=useState(null);const[editId,setEditId]=useState(null);const[payDoc,setPayDoc]=useState(null);
   const blank={patientId:'',doctorId:'',date:today(),dueDate:'',items:[{desc:'',qty:1,rate:0,amount:0}],tax:0,discount:0,paid:0,notes:'',payments:[]};
@@ -849,6 +1094,9 @@ const Invoices=({db,setDb,can})=>{
   </div>);
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// RECEIPTS
+// ═══════════════════════════════════════════════════════════════════════════════
 const Receipts=({db,setDb,can})=>{
   const[modal,setModal]=useState(false);const[editId,setEditId]=useState(null);const[viewRcp,setViewRcp]=useState(null);
   const blank={patientId:'',invoiceId:'',date:today(),amount:'',method:'Cash',notes:''};
@@ -901,6 +1149,9 @@ const Receipts=({db,setDb,can})=>{
   </div>);
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// BILLS
+// ═══════════════════════════════════════════════════════════════════════════════
 const Bills=({db,setDb,can})=>{
   const[modal,setModal]=useState(false);const[viewDoc,setViewDoc]=useState(null);const[editId,setEditId]=useState(null);const[payDoc,setPayDoc]=useState(null);
   const blank={supplierId:'',date:today(),dueDate:'',items:[{desc:'',qty:1,rate:0,amount:0}],tax:0,paid:0,notes:'',payments:[]};
@@ -941,6 +1192,9 @@ const Bills=({db,setDb,can})=>{
   </div>);
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// EXPENSES
+// ═══════════════════════════════════════════════════════════════════════════════
 const Expenses=({db,setDb,can})=>{
   const[modal,setModal]=useState(false);const[editId,setEditId]=useState(null);const[viewExp,setViewExp]=useState(null);
   const blank={category:'Utilities',date:today(),description:'',amount:'',paymentMethod:'Cash',notes:''};
@@ -996,6 +1250,9 @@ const Expenses=({db,setDb,can})=>{
   </div>);
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// REPORTS
+// ═══════════════════════════════════════════════════════════════════════════════
 const Reports=({db})=>{
   const[tab,setTab]=useState('overview');
   const rev=db.invoices.reduce((a,i)=>a+i.paid,0);const cogs=db.bills.reduce((a,b)=>a+b.paid,0);const opex=db.expenses.reduce((a,e)=>a+e.amount,0);
@@ -1008,7 +1265,7 @@ const Reports=({db})=>{
   return(<div>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.1rem'}}>
       <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:'1.55rem',color:'#e0f0fc',margin:0}}>Reports & Financials</h2>
-      <Btn sm ghost icon="print" onClick={()=>printPLReport(db)}>Print P&L</Btn>
+      <div style={{display:'flex',gap:'.38rem'}}><Btn sm ghost icon="print" onClick={()=>printPLReport(db)}>Print P&L</Btn></div>
     </div>
     <div style={{display:'flex',gap:'.38rem',marginBottom:'1.1rem',flexWrap:'wrap'}}>
       {TABS.map(([k,l])=><button key={k} onClick={()=>setTab(k)} style={{background:tab===k?'#14508a':'transparent',border:tab===k?'none':'1px solid #1e3650',borderRadius:7,padding:'.32rem .82rem',color:tab===k?'#fff':'#4a7090',cursor:'pointer',fontWeight:tab===k?700:400,fontSize:'.78rem'}}>{l}</button>)}
@@ -1063,6 +1320,9 @@ const Reports=({db})=>{
   </div>);
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// DOCTORS
+// ═══════════════════════════════════════════════════════════════════════════════
 const Doctors=({db,setDb,can})=>{
   const[modal,setModal]=useState(false);const[editId,setEditId]=useState(null);
   const blank={name:'',specialization:'',phone:'',email:'',fee:'',active:true};
@@ -1103,6 +1363,9 @@ const Doctors=({db,setDb,can})=>{
   </div>);
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// SUPPLIERS
+// ═══════════════════════════════════════════════════════════════════════════════
 const Suppliers=({db,setDb,can})=>{
   const[modal,setModal]=useState(false);const[editId,setEditId]=useState(null);
   const blank={name:'',contact:'',phone:'',email:'',address:'',category:'Dental Supplies'};
@@ -1140,6 +1403,9 @@ const Suppliers=({db,setDb,can})=>{
   </div>);
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// USERS & ROLE PERMISSIONS
+// ═══════════════════════════════════════════════════════════════════════════════
 const UsersPage=({db,setDb,currentUser})=>{
   const[tab,setTab]=useState('users');
   const[modal,setModal]=useState(false);const[editId,setEditId]=useState(null);
@@ -1214,21 +1480,25 @@ const UsersPage=({db,setDb,currentUser})=>{
   </div>);
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════════════════════════════════════════
 const Settings=({db,setDb,can,fbStatus})=>{
   const[tab,setTab]=useState('clinic');
   const s=db.settings||SEED.settings;
   const upd=v=>setDb(x=>({...x,settings:{...x.settings,...v}}));
   const logoRef=useRef();const importRef=useRef();
-  const handleLogo=e=>{const fi=e.target.files[0];if(!fi)return;const r=new FileReader();r.onload=ev=>upd({logo:ev.target.result});r.readAsDataURL(fi);};
+  const handleLogo=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>upd({logo:ev.target.result});r.readAsDataURL(f);};
   const editable=can('edit_settings');
   const exportData=()=>{const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`adc-backup-${today()}.json`;a.click();showToast('Backup downloaded!');};
-  const importData=e=>{const fi=e.target.files[0];if(!fi)return;const r=new FileReader();r.onload=ev=>{try{const d=JSON.parse(ev.target.result);setDb(d);showToast('Data imported successfully!');}catch{showToast('Invalid backup file.',true);}};r.readAsText(fi);};
+  const importData=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{try{const d=JSON.parse(ev.target.result);setDb(d);showToast('Data imported successfully!');}catch{showToast('Invalid backup file.',true);}};r.readAsText(f);};
   const layouts=[{value:'classic',label:'Classic',desc:'Traditional with header bar'},{value:'modern',label:'Modern',desc:'Bold colored hero header'},{value:'minimal',label:'Minimal',desc:'Clean typographic style'}];
   if(!can('view_settings')) return <div style={{color:'#2e4a60',textAlign:'center',padding:'4rem'}}>Access denied.</div>;
+  const TABS=[['clinic','Clinic Info'],['documents','Document Layout'],['sync','Multi-Device Sync']];
   return(<div>
     <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:'1.55rem',color:'#e0f0fc',margin:'0 0 1.1rem'}}>Settings</h2>
     <div style={{display:'flex',gap:'.38rem',marginBottom:'1.1rem'}}>
-      {[['clinic','Clinic Info'],['documents','Document Layout'],['sync','Sync & Backup']].map(([k,l])=><button key={k} onClick={()=>setTab(k)} style={{background:tab===k?'#14508a':'transparent',border:tab===k?'none':'1px solid #1e3650',borderRadius:7,padding:'.32rem .82rem',color:tab===k?'#fff':'#4a7090',cursor:'pointer',fontWeight:tab===k?700:400,fontSize:'.78rem'}}>{l}</button>)}
+      {TABS.map(([k,l])=><button key={k} onClick={()=>setTab(k)} style={{background:tab===k?'#14508a':'transparent',border:tab===k?'none':'1px solid #1e3650',borderRadius:7,padding:'.32rem .82rem',color:tab===k?'#fff':'#4a7090',cursor:'pointer',fontWeight:tab===k?700:400,fontSize:'.78rem'}}>{l}</button>)}
     </div>
     {tab==='clinic'&&<Card>
       <div style={{display:'flex',gap:'1.3rem',alignItems:'flex-start',marginBottom:'1.3rem'}}>
@@ -1251,54 +1521,78 @@ const Settings=({db,setDb,can,fbStatus})=>{
       <G2><FI label="Currency Label" value={s.currency||'Rs.'} onChange={v=>upd({currency:v})} readOnly={!editable}/><FI label="Tax Label" value={s.taxLabel||'GST'} onChange={v=>upd({taxLabel:v})} readOnly={!editable}/></G2>
       {editable&&<div style={{color:'#38c878',fontSize:'.76rem',marginTop:'.5rem',display:'flex',alignItems:'center',gap:5}}><Icon n="check" s={12}/>Settings saved automatically.</div>}
     </Card>}
-    {tab==='documents'&&<Card>
-      <div style={{color:'#4a7090',fontSize:'.67rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:'1rem'}}>Invoice Layout</div>
-      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'.65rem',marginBottom:'1.2rem'}}>
-        {layouts.map(l=>(
-          <div key={l.value} onClick={()=>editable&&upd({invoiceLayout:l.value})} style={{border:`2px solid ${s.invoiceLayout===l.value?'#14508a':'#1e3650'}`,borderRadius:12,padding:'.8rem',cursor:editable?'pointer':'default',background:s.invoiceLayout===l.value?'#0a1f35':'#060c16',transition:'all .15s'}}>
-            <div style={{color:s.invoiceLayout===l.value?'#4a90d9':'#e0f0fc',fontWeight:600,marginBottom:3}}>{l.label}</div>
-            <div style={{color:'#4a7090',fontSize:'.72rem'}}>{l.desc}</div>
-          </div>
-        ))}
-      </div>
-      <G2>
-        <div>
-          <div style={{color:'#4a7090',fontSize:'.67rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:7}}>Accent Color</div>
-          <div style={{display:'flex',gap:'.5rem',alignItems:'center'}}>
-            <input type="color" value={s.invoiceColor||'#1565a0'} onChange={e=>editable&&upd({invoiceColor:e.target.value})} style={{width:40,height:40,borderRadius:8,cursor:'pointer',border:'1px solid #1e3650',background:'none'}}/>
-            <span style={{color:'#e0f0fc',fontSize:'.84rem',fontWeight:600}}>{s.invoiceColor||'#1565a0'}</span>
-          </div>
-        </div>
-        <div>
-          <div style={{color:'#4a7090',fontSize:'.67rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:7}}>Logo on Documents</div>
-          <label style={{display:'flex',alignItems:'center',gap:'.48rem',cursor:'pointer'}}>
-            <input type="checkbox" checked={!!s.showLogoOnDocs} onChange={e=>editable&&upd({showLogoOnDocs:e.target.checked})}/>
-            <span style={{color:'#e0f0fc',fontSize:'.84rem'}}>Show logo on printed PDFs</span>
-          </label>
-        </div>
-      </G2>
-      <FTA label="Invoice Footer Text" value={s.invoiceFooter} onChange={v=>editable&&upd({invoiceFooter:v})} rows={2}/>
-      <FTA label="Receipt Footer Text" value={s.receiptFooter} onChange={v=>editable&&upd({receiptFooter:v})} rows={2}/>
-    </Card>}
-    {tab==='sync'&&<div>
+    {tab==='documents'&&<div>
       <Card style={{marginBottom:'1rem'}}>
-        <div style={{display:'flex',gap:'1rem',alignItems:'center',marginBottom:'1rem'}}>
-          <div style={{width:46,height:46,background:fbStatus==='online'?'linear-gradient(135deg,#0a3a20,#14508a)':'linear-gradient(135deg,#0a2a4a,#14508a)',borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-            <Icon n={fbStatus==='online'?'wifi':'sync'} s={22}/>
-          </div>
+        <div style={{color:'#4a7090',fontSize:'.67rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:'1rem'}}>Invoice Layout</div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'.65rem',marginBottom:'1.2rem'}}>
+          {layouts.map(l=>(
+            <div key={l.value} onClick={()=>editable&&upd({invoiceLayout:l.value})} style={{border:`2px solid ${s.invoiceLayout===l.value?'#14508a':'#1e3650'}`,borderRadius:12,padding:'.8rem',cursor:editable?'pointer':'default',background:s.invoiceLayout===l.value?'#0a1f35':'#060c16',transition:'all .15s'}}>
+              <div style={{color:s.invoiceLayout===l.value?'#4a90d9':'#e0f0fc',fontWeight:600,marginBottom:3}}>{l.label}</div>
+              <div style={{color:'#4a7090',fontSize:'.72rem'}}>{l.desc}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{color:'#4a7090',fontSize:'.67rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:'1rem'}}>Receipt Layout</div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'.65rem',marginBottom:'1.2rem'}}>
+          {layouts.map(l=>(
+            <div key={l.value} onClick={()=>editable&&upd({receiptLayout:l.value})} style={{border:`2px solid ${s.receiptLayout===l.value?'#14508a':'#1e3650'}`,borderRadius:12,padding:'.8rem',cursor:editable?'pointer':'default',background:s.receiptLayout===l.value?'#0a1f35':'#060c16',transition:'all .15s'}}>
+              <div style={{color:s.receiptLayout===l.value?'#4a90d9':'#e0f0fc',fontWeight:600,marginBottom:3}}>{l.label}</div>
+              <div style={{color:'#4a7090',fontSize:'.72rem'}}>{l.desc}</div>
+            </div>
+          ))}
+        </div>
+        <G2>
           <div>
-            <div style={{color:'#e0f0fc',fontWeight:700,fontSize:'.98rem'}}>Firebase Real-Time Sync</div>
-            <div style={{display:'flex',alignItems:'center',gap:6,marginTop:3,fontSize:'.76rem',color:fbStatus==='online'?'#38c878':fbStatus==='connecting'?'#e8a030':'#4a7090'}}>
-              <div style={{width:7,height:7,borderRadius:'50%',background:fbStatus==='online'?'#38c878':fbStatus==='connecting'?'#e8a030':'#4a7090'}}/>
-              {fbStatus==='online'?'✅ Connected — changes sync instantly across all devices':fbStatus==='connecting'?'Connecting to Firebase…':'Checking connection…'}
+            <div style={{color:'#4a7090',fontSize:'.67rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:7}}>Accent Color</div>
+            <div style={{display:'flex',gap:'.5rem',alignItems:'center'}}>
+              <input type="color" value={s.invoiceColor||'#1565a0'} onChange={e=>editable&&upd({invoiceColor:e.target.value})} style={{width:40,height:40,borderRadius:8,cursor:'pointer',border:'1px solid #1e3650',background:'none'}}/>
+              <span style={{color:'#e0f0fc',fontSize:'.84rem',fontWeight:600}}>{s.invoiceColor||'#1565a0'}</span>
             </div>
           </div>
+          <div>
+            <div style={{color:'#4a7090',fontSize:'.67rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:7}}>Logo on Documents</div>
+            <label style={{display:'flex',alignItems:'center',gap:'.48rem',cursor:'pointer'}}>
+              <input type="checkbox" checked={!!s.showLogoOnDocs} onChange={e=>editable&&upd({showLogoOnDocs:e.target.checked})}/>
+              <span style={{color:'#e0f0fc',fontSize:'.84rem'}}>Show logo on printed PDFs</span>
+            </label>
+          </div>
+        </G2>
+        <FTA label="Invoice Footer Text" value={s.invoiceFooter} onChange={v=>editable&&upd({invoiceFooter:v})} rows={2}/>
+        <FTA label="Receipt Footer Text" value={s.receiptFooter} onChange={v=>editable&&upd({receiptFooter:v})} rows={2}/>
+      </Card>
+      <Card>
+        <div style={{color:'#4a7090',fontSize:'.67rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:'1rem'}}>Live Preview</div>
+        <div style={{background:'#fff',borderRadius:10,padding:'1.1rem',color:'#111',fontFamily:'Georgia,serif'}}>
+          <div style={{display:'flex',justifyContent:'space-between',borderBottom:`2px solid ${s.invoiceColor||'#1565a0'}`,paddingBottom:10,marginBottom:12}}>
+            {s.logo&&s.showLogoOnDocs?<img src={s.logo} style={{height:34,objectFit:'contain'}}/>:<div style={{width:34,height:34,background:s.invoiceColor||'#1565a0',borderRadius:6,display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontWeight:'bold',fontSize:14}}>{(s.clinicName||'A').charAt(0)}</div>}
+            <div style={{textAlign:'right'}}><div style={{fontWeight:'bold',color:s.invoiceColor||'#1565a0',fontSize:13}}>{s.clinicName||'Clinic Name'}</div><div style={{color:'#888',fontSize:11}}>{s.address||'Address'}</div></div>
+          </div>
+          <div style={{display:'flex',justifyContent:'space-between'}}><div><div style={{fontWeight:'bold',fontSize:12,color:s.invoiceColor||'#1565a0'}}>INV-PREVIEW</div><div style={{color:'#888',fontSize:10}}>Date: {today()}</div></div><div style={{textAlign:'right',color:'#888',fontSize:10}}>Patient Name</div></div>
         </div>
-        {fbStatus==='online'&&<div style={{background:'#0b3a22',border:'1px solid #38c878',borderRadius:10,padding:'1rem'}}>
-          <div style={{color:'#38c878',fontSize:'.84rem',fontWeight:700,marginBottom:6}}>🔗 Your Firebase Database</div>
-          <div style={{color:'#6a90a8',fontSize:'.78rem'}}>Project: <strong style={{color:'#e0f0fc'}}>ayesha-dental-clinicmanagement</strong></div>
-          <div style={{color:'#6a90a8',fontSize:'.78rem',marginTop:3}}>Data path: <code style={{color:'#38c878',background:'#060c16',padding:'1px 5px',borderRadius:4}}>adc/v1</code></div>
-          <div style={{color:'#6a90a8',fontSize:'.78rem',marginTop:3}}>All devices connected to the internet will see changes in real-time.</div>
+      </Card>
+    </div>}
+    {tab==='sync'&&<div>
+      <Card style={{marginBottom:'1rem'}}>
+        <div style={{display:'flex',gap:'1rem',alignItems:'center',marginBottom:'1.2rem'}}>
+          <div style={{width:46,height:46,background:'linear-gradient(135deg,#0a2a4a,#14508a)',borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Icon n="wifi" s={22}/></div>
+          <div><div style={{color:'#e0f0fc',fontWeight:700,fontSize:'.98rem'}}>Firebase Real-Time Sync</div>
+          <div style={{display:'flex',alignItems:'center',gap:6,marginTop:3,fontSize:'.76rem',color:fbStatus==='online'?'#38c878':fbStatus==='configuring'?'#e8a030':'#4a7090'}}>
+            <div style={{width:7,height:7,borderRadius:'50%',background:fbStatus==='online'?'#38c878':fbStatus==='configuring'?'#e8a030':'#4a7090'}}/>
+            {fbStatus==='online'?'Connected — data syncs in real time across all devices':fbStatus==='configuring'?'Not configured — see instructions below':'Offline — add your Firebase config to enable cloud sync'}
+          </div></div>
+        </div>
+        {fbStatus!=='online'&&<div style={{background:'#060c16',border:'1px solid #1e3650',borderRadius:10,padding:'1rem',marginBottom:'1rem'}}>
+          <div style={{color:'#e8a030',fontSize:'.8rem',fontWeight:700,marginBottom:8}}>⚡ How to enable free real-time cloud sync:</div>
+          <div style={{color:'#6a90a8',fontSize:'.8rem',lineHeight:2}}>
+            1. Go to <strong style={{color:'#4a90d9'}}>console.firebase.google.com</strong><br/>
+            2. Click "Add project" → Give it a name (e.g. "ayesha-dental") → Continue<br/>
+            3. Click "Build" → "Realtime Database" → "Create Database" → choose region → "Start in test mode"<br/>
+            4. Click the gear icon → "Project settings" → scroll to "Your apps" → click "Web" (&lt;/&gt;)<br/>
+            5. Register the app → copy the <code style={{color:'#38c878',background:'#0d1a28',padding:'1px 5px',borderRadius:4}}>firebaseConfig</code> object<br/>
+            6. Open this <code style={{color:'#38c878'}}>index.html</code> file in a text editor<br/>
+            7. Find <code style={{color:'#38c878'}}>const FIREBASE_CONFIG</code> near the top and replace the placeholder values<br/>
+            8. Save and re-upload to GitHub Pages — done! All devices will sync in real time.
+          </div>
         </div>}
       </Card>
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'1rem',marginBottom:'1rem'}}>
@@ -1321,14 +1615,14 @@ const Settings=({db,setDb,can,fbStatus})=>{
         </Card>
       </div>
       <Card>
-        <div style={{color:'#4a7090',fontSize:'.67rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:'1rem'}}>Data Summary</div>
+        <div style={{color:'#4a7090',fontSize:'.67rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:'1rem'}}>Storage Status</div>
         <div className="grid-3" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'.65rem'}}>
           {[['Patients',db.patients?.length||0],['Invoices',db.invoices?.length||0],['Appointments',db.appointments?.length||0],['Receipts',db.receipts?.length||0],['Bills',db.bills?.length||0],['Expenses',db.expenses?.length||0]].map(([k,v])=>(
             <div key={k} style={{background:'#060c16',borderRadius:8,padding:'.55rem .75rem'}}><div style={{color:'#2e4a60',fontSize:'.64rem',textTransform:'uppercase',marginBottom:2}}>{k}</div><div style={{color:'#e0f0fc',fontWeight:700}}>{v}</div></div>
           ))}
         </div>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:'1rem'}}>
-          <div style={{color:'#2e4a60',fontSize:'.74rem'}}>Sync: {fbStatus==='online'?'Firebase Cloud ☁ + localStorage':'localStorage only'}</div>
+          <div style={{color:'#2e4a60',fontSize:'.74rem'}}>Data stored in: {fbStatus==='online'?'Firebase Cloud + localStorage':'localStorage (this browser only)'}</div>
           {editable&&<Btn sm ghost danger onClick={()=>{if(window.confirm('RESET ALL DATA? Cannot be undone.'))setDb({...SEED,_ts:Date.now()});}}>Reset All Data</Btn>}
         </div>
       </Card>
@@ -1348,6 +1642,7 @@ function App(){
   const syncTimerRef=useRef(null);
   const isRemoteUpdate=useRef(false);
 
+  // Wrap setDb to add timestamp and handle sync
   const setDb=useCallback(updFn=>{
     setDbRaw(prev=>{
       const next=typeof updFn==='function'?updFn(prev):updFn;
@@ -1359,7 +1654,6 @@ function App(){
           setSyncing(true);
           await window.__fb?.save(stamped);
           setSyncing(false);
-          showToast('☁ Synced to Firebase');
         },800);
       }
       return stamped;
@@ -1367,12 +1661,9 @@ function App(){
   },[]);
 
   useEffect(()=>{
-    // Wait for Firebase module to initialize (it's a separate script)
     const init=async()=>{
-      // Give the module script time to set window.__fb
       await new Promise(r=>setTimeout(r,500));
       if(!window.__fb?.enabled){setFbStatus('offline');return;}
-
       try{
         const remote=await window.__fb.load();
         if(remote){
@@ -1385,13 +1676,10 @@ function App(){
             showToast('☁ Data loaded from Firebase!');
           }
         } else {
-          // First time — push local seed data to Firebase
           await window.__fb.save(db);
           showToast('☁ Initial data pushed to Firebase!');
         }
         setFbStatus('online');
-
-        // Subscribe to real-time updates
         window.__fb.subscribe(data=>{
           isRemoteUpdate.current=true;
           setDbRaw(prev=>{
@@ -1403,7 +1691,6 @@ function App(){
           });
           setTimeout(()=>{isRemoteUpdate.current=false;},100);
         });
-
       }catch(e){
         console.error('Firebase connection error:',e);
         setFbStatus('offline');
@@ -1412,6 +1699,10 @@ function App(){
     };
     init();
   },[]);
+
+  const[mobOpen,setMobOpen]=useState(false);
+  const closeMob=()=>setMobOpen(false);
+  const navTo=k=>{setActive(k);closeMob();};
 
   const can=useCallback(perm=>{
     if(!currentUser)return false;
@@ -1445,32 +1736,25 @@ function App(){
   const roleColors={admin:'#e8a030',doctor:'#4a90d9',accountant:'#38c878',receptionist:'#c084fc'};
   const pages={dashboard:<Dashboard db={db}/>,patients:<Patients db={db} setDb={setDb} can={can}/>,appointments:<Appointments db={db} setDb={setDb} can={can}/>,history:<History db={db} setDb={setDb} can={can}/>,prescriptions:<Prescriptions db={db} setDb={setDb} can={can}/>,invoices:<Invoices db={db} setDb={setDb} can={can}/>,receipts:<Receipts db={db} setDb={setDb} can={can}/>,bills:<Bills db={db} setDb={setDb} can={can}/>,expenses:<Expenses db={db} setDb={setDb} can={can}/>,reports:<Reports db={db}/>,doctors:<Doctors db={db} setDb={setDb} can={can}/>,suppliers:<Suppliers db={db} setDb={setDb} can={can}/>,users:<UsersPage db={db} setDb={setDb} currentUser={currentUser}/>,settings:<Settings db={db} setDb={setDb} can={can} fbStatus={fbStatus}/>};
 
-  const[mobOpen,setMobOpen]=useState(false);
-  const closeMob=()=>setMobOpen(false);
-  const navTo=k=>{setActive(k);closeMob();};
+  // Bottom nav items (5 most important, rest in drawer)
   const bnav=nav.filter(n=>n&&['dashboard','patients','appointments','invoices','reports'].includes(n.k)).slice(0,4);
 
-  const SidebarInner=({mobile=false})=>(
+  // Sidebar inner shared between desktop and mobile drawer
+  const SidebarInner=()=>(
     <>
-      {mobile
-        ?<div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'1rem .88rem .85rem',borderBottom:'1px solid #1e3650'}}>
-          <div style={{display:'flex',alignItems:'center',gap:'.6rem'}}>
-            {db.settings?.logo?<img src={db.settings.logo} style={{width:30,height:30,borderRadius:7,objectFit:'contain',background:'#14508a',padding:2,flexShrink:0}}/>:
-              <div style={{width:30,height:30,background:'linear-gradient(135deg,#14508a,#0c3060)',borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Icon n="tooth" s={16}/></div>}
-            <div><div style={{color:'#e0f0fc',fontFamily:"'Cormorant Garamond',serif",fontSize:'.85rem',fontWeight:700}}>{db.settings?.clinicName||'Dental Clinic'}</div><div style={{color:'#2e4a60',fontSize:'.56rem'}}>Management System</div></div>
-          </div>
-          <button onClick={closeMob} style={{background:'none',border:'none',color:'#4a7090',cursor:'pointer',padding:4}}><Icon n="close" s={18}/></button>
-        </div>
-        :<div style={{padding:'1.05rem .88rem .85rem',borderBottom:'1px solid #1e3650'}}>
+      <div style={{padding:'1.05rem .88rem .85rem',borderBottom:'1px solid #1e3650'}}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
           <div style={{display:'flex',alignItems:'center',gap:'.6rem'}}>
             {db.settings?.logo?<img src={db.settings.logo} style={{width:32,height:32,borderRadius:8,objectFit:'contain',background:'#14508a',padding:2,flexShrink:0}}/>:
               <div style={{width:32,height:32,background:'linear-gradient(135deg,#14508a,#0c3060)',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Icon n="tooth" s={17}/></div>}
             <div><div style={{color:'#e0f0fc',fontFamily:"'Cormorant Garamond',serif",fontSize:'.87rem',fontWeight:700,lineHeight:1.1}}>{db.settings?.clinicName||'Dental Clinic'}</div><div style={{color:'#2e4a60',fontSize:'.57rem',marginTop:1}}>Management System</div></div>
           </div>
-        </div>}
-      <div style={{display:'flex',alignItems:'center',gap:6,padding:'.42rem .88rem',background:'#060c16',borderBottom:'1px solid #1e3650',fontSize:'.66rem',color:fbStatus==='online'?'#38c878':fbStatus==='connecting'?'#e8a030':'#4a7090'}}>
+          <button onClick={closeMob} className="hide-mobile" style={{display:'none',background:'none',border:'none',color:'#4a7090',cursor:'pointer',padding:4}} id="mob-close-btn"><Icon n="close" s={18}/></button>
+        </div>
+      </div>
+      <div style={{display:'flex',alignItems:'center',gap:6,padding:'.42rem .88rem',background:'#060c16',borderBottom:'1px solid #1e3650',fontSize:'.66rem',color:fbStatus==='online'?'#38c878':'#4a7090'}}>
         <Icon n={syncing?'sync':fbStatus==='online'?'wifi':'wifioff'} s={11} className={syncing?'syncing':''}/>
-        {syncing?'Syncing to Firebase…':fbStatus==='online'?'☁ Firebase Sync Active':fbStatus==='connecting'?'Connecting…':'Offline'}
+        {syncing?'Syncing…':fbStatus==='online'?'Cloud sync on':'Local only'}
       </div>
       <nav style={{flex:1,padding:'.6rem .52rem',overflowY:'auto'}}>
         {nav.map((n,i)=>n===null?<div key={i} style={{height:1,background:'#1e3650',margin:'.32rem 0'}}/>:(
@@ -1497,40 +1781,153 @@ function App(){
     </>
   );
 
-  return(<div style={{display:'flex',minHeight:'100vh',background:'#040b13'}}>
+  return(<div style={{display:'flex',minHeight:'100vh',background:'#040b13',fontFamily:"'DM Sans',sans-serif",color:'#e0f0fc'}}>
+
+    {/* ── DESKTOP SIDEBAR (hidden on mobile via CSS) ── */}
     <aside className="sidebar-desktop" style={{width:210,background:'#070f1a',borderRight:'1px solid #1e3650',display:'flex',flexDirection:'column',flexShrink:0,position:'sticky',top:0,height:'100vh',overflowY:'auto'}}>
       <SidebarInner/>
     </aside>
+
+    {/* ── MOBILE OVERLAY ── */}
     <div className={'mob-overlay'+(mobOpen?' open':'')} onClick={closeMob}/>
-    <aside className={'sidebar-mobile'+(mobOpen?' open':'')}>
-      <SidebarInner mobile/>
-    </aside>
-    <div className="mob-header">
-      <button onClick={()=>setMobOpen(true)} style={{background:'none',border:'none',color:'#e0f0fc',cursor:'pointer',padding:4,display:'flex'}}><Icon n="menu" s={22}/></button>
-      <span style={{fontFamily:"'Cormorant Garamond',serif",color:'#e0f0fc',fontSize:'1.05rem',fontWeight:700}}>{db.settings?.clinicName||'Dental Clinic'}</span>
-      <div style={{display:'flex',alignItems:'center',gap:4,fontSize:'.65rem',color:fbStatus==='online'?'#38c878':'#e8a030'}}>
-        <Icon n={fbStatus==='online'?'wifi':'sync'} s={12}/>{fbStatus==='online'?'Live':'…'}
+
+    {/* ── MOBILE DRAWER SIDEBAR ── */}
+    <aside className={'sidebar-mobile'+(mobOpen?' open':'')} style={{display:'flex',flexDirection:'column'}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'1rem .88rem .85rem',borderBottom:'1px solid #1e3650'}}>
+        <div style={{display:'flex',alignItems:'center',gap:'.6rem'}}>
+          {db.settings?.logo?<img src={db.settings.logo} style={{width:30,height:30,borderRadius:7,objectFit:'contain',background:'#14508a',padding:2,flexShrink:0}}/>:
+            <div style={{width:30,height:30,background:'linear-gradient(135deg,#14508a,#0c3060)',borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Icon n="tooth" s={16}/></div>}
+          <div><div style={{color:'#e0f0fc',fontFamily:"'Cormorant Garamond',serif",fontSize:'.85rem',fontWeight:700,lineHeight:1.1}}>{db.settings?.clinicName||'Dental Clinic'}</div><div style={{color:'#2e4a60',fontSize:'.56rem',marginTop:1}}>Management System</div></div>
+        </div>
+        <button onClick={closeMob} style={{background:'none',border:'none',color:'#4a7090',cursor:'pointer',padding:4}}><Icon n="close" s={18}/></button>
       </div>
-    </div>
-    <div style={{display:'flex',flexDirection:'column',flex:1,minWidth:0}}>
-      <main className="main-content" style={{flex:1,padding:'1.5rem 1.7rem',overflowY:'auto',maxHeight:'100vh'}}>
-        {pages[active]||<div style={{color:'#2e4a60',textAlign:'center',padding:'4rem'}}>Select a section.</div>}
-      </main>
-    </div>
-    <nav className="bottom-nav">
-      {bnav.map(n=>(
-        <button key={n.k} className={'bottom-nav-item'+(active===n.k?' active':'')} onClick={()=>navTo(n.k)}>
-          <Icon n={n.icon} s={20}/><span>{n.label}</span>
+      <div style={{display:'flex',alignItems:'center',gap:6,padding:'.4rem .88rem',background:'#060c16',borderBottom:'1px solid #1e3650',fontSize:'.65rem',color:fbStatus==='online'?'#38c878':'#4a7090'}}>
+        <Icon n={syncing?'sync':fbStatus==='online'?'wifi':'wifioff'} s={11} className={syncing?'syncing':''}/>
+        {syncing?'Syncing…':fbStatus==='online'?'Cloud sync on':'Local only'}
+      </div>
+      <nav style={{flex:1,padding:'.6rem .5rem',overflowY:'auto'}}>
+        {nav.map((n,i)=>n===null?<div key={i} style={{height:1,background:'#1e3650',margin:'.3rem 0'}}/>:(
+          <button key={n.k} onClick={()=>navTo(n.k)}
+            style={{width:'100%',display:'flex',alignItems:'center',gap:'.55rem',padding:'.52rem .72rem',borderRadius:8,border:'none',background:active===n.k?'#14508a':'transparent',color:active===n.k?'#fff':'#4a7090',cursor:'pointer',fontSize:'.82rem',fontWeight:active===n.k?700:400,marginBottom:2,textAlign:'left',minHeight:42}}>
+            <Icon n={n.icon} s={15}/>{n.label}
+          </button>
+        ))}
+      </nav>
+      <div style={{padding:'.6rem .7rem',borderTop:'1px solid #1e3650'}}>
+        <div style={{display:'flex',alignItems:'center',gap:'.5rem',marginBottom:'.5rem'}}>
+          <div style={{width:30,height:30,borderRadius:'50%',background:`linear-gradient(135deg,${roleColors[currentUser.role]}44,${roleColors[currentUser.role]}22)`,border:`1.5px solid ${roleColors[currentUser.role]}55`,display:'flex',alignItems:'center',justifyContent:'center',color:roleColors[currentUser.role],fontWeight:700,fontSize:'.9rem',flexShrink:0}}>{currentUser.name.charAt(0)}</div>
+          <div style={{overflow:'hidden',flex:1}}>
+            <div style={{color:'#e0f0fc',fontSize:'.78rem',fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{currentUser.name}</div>
+            <div style={{color:roleColors[currentUser.role],fontSize:'.63rem',textTransform:'capitalize'}}>{currentUser.role}</div>
+          </div>
+        </div>
+        <button onClick={()=>setCurrentUser(null)} style={{width:'100%',background:'transparent',border:'1px solid #1e3650',borderRadius:7,padding:'.4rem',color:'#4a7090',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:5,fontSize:'.74rem'}}>
+          <Icon n="logout" s={12}/>Sign Out
         </button>
-      ))}
-      <button className="bnav-more" onClick={()=>setMobOpen(true)}>
-        <Icon n="menu" s={20}/><span style={{fontSize:'.6rem',fontWeight:600}}>More</span>
-      </button>
-    </nav>
+      </div>
+    </aside>
+
+    {/* ── RIGHT COLUMN: header + main + bottom nav ── */}
+    <div style={{display:'flex',flexDirection:'column',flex:1,minWidth:0,minHeight:'100vh'}}>
+
+      {/* Mobile top header — hidden on desktop via CSS */}
+      <div className="mob-header">
+        <button onClick={()=>setMobOpen(true)} style={{background:'none',border:'none',color:'#e0f0fc',cursor:'pointer',padding:4,display:'flex',alignItems:'center'}}><Icon n="menu" s={22}/></button>
+        <span style={{fontFamily:"'Cormorant Garamond',serif",color:'#e0f0fc',fontSize:'1.05rem',fontWeight:700}}>{db.settings?.clinicName||'Dental Clinic'}</span>
+        <div style={{width:28,display:'flex',alignItems:'center',justifyContent:'flex-end',color:fbStatus==='online'?'#38c878':'#4a7090'}}>
+          <Icon n={fbStatus==='online'?'wifi':'wifioff'} s={14}/>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <main className="main-content" style={{flex:1,padding:'1.5rem 1.7rem',overflowY:'auto',maxHeight:'100vh'}}>
+        {pages[active]||<div style={{color:'#2e4a60',textAlign:'center',padding:'4rem'}}>Select a section from the sidebar.</div>}
+      </main>
+
+      {/* Mobile bottom nav — hidden on desktop via CSS */}
+      <nav className="bottom-nav">
+        {bnav.map(n=>(
+          <button key={n.k} className={'bottom-nav-item'+(active===n.k?' active':'')} onClick={()=>navTo(n.k)}>
+            <Icon n={n.icon} s={20}/>
+            <span>{n.label}</span>
+          </button>
+        ))}
+        <button className="bnav-more" onClick={()=>setMobOpen(true)}>
+          <Icon n="menu" s={20}/>
+          <span style={{fontSize:'.6rem',fontWeight:600}}>More</span>
+        </button>
+      </nav>
+
+    </div>
+
   </div>);
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 </script>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+  GITHUB PAGES DEPLOYMENT GUIDE
+  (This comment is not shown to users — it's your reference)
+
+  ═══════════════════════════════════════════════════════════════════════════
+  STEP 1 — Create a GitHub account (free)
+    → Go to github.com and sign up
+
+  STEP 2 — Create a new repository
+    → Click "New" (green button)
+    → Name it: ayesha-dental (or anything)
+    → Set to Public
+    → Click "Create repository"
+
+  STEP 3 — Upload this file
+    → Click "uploading an existing file"
+    → Drag & drop this index.html file
+    → Scroll down → click "Commit changes"
+
+  STEP 4 — Enable GitHub Pages
+    → Go to Settings (tab at top of your repo)
+    → Click "Pages" in the left sidebar
+    → Under "Source" select "Deploy from a branch"
+    → Branch: main, Folder: / (root)
+    → Click Save
+    → Wait ~2 minutes
+
+  STEP 5 — Get your URL
+    → Refresh the Pages settings page
+    → You'll see: "Your site is live at https://YOUR-USERNAME.github.io/ayesha-dental"
+    → Open this URL on any device — it will work!
+
+  ═══════════════════════════════════════════════════════════════════════════
+  OPTIONAL: Add Firebase for real-time multi-device sync
+
+  STEP A — Create free Firebase project
+    → Go to console.firebase.google.com
+    → "Add project" → name it "ayesha-dental" → Continue → Continue → Create project
+
+  STEP B — Add Realtime Database
+    → In Firebase console, click "Build" in left sidebar → "Realtime Database"
+    → Click "Create Database" → choose closest region → "Start in test mode" → Enable
+
+  STEP C — Get your config
+    → Click gear icon (top left) → "Project settings"
+    → Scroll to "Your apps" → click Web icon (</>)
+    → App nickname: "dental-app" → click "Register app"
+    → Copy the firebaseConfig object shown
+
+  STEP D — Update this file
+    → Open index.html in Notepad (Windows) or TextEdit (Mac)
+    → Find: const FIREBASE_CONFIG = {
+    → Replace the placeholder values with your real values from Step C
+
+  STEP E — Re-upload to GitHub
+    → In your GitHub repo, click index.html → click pencil (edit) icon
+    → Paste your updated content → click "Commit changes"
+    → Done! All devices will now sync in real time.
+
+  WITHOUT FIREBASE: The app still works perfectly on any device via GitHub
+  Pages — each device just has its own local data. Use the Export/Import
+  buttons in Settings → Multi-Device Sync to manually transfer data.
+═══════════════════════════════════════════════════════════════════════════ -->
 </body>
 </html>
