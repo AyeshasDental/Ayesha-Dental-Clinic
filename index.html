@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Ayesha Dental Clinic — Management System</title>
+<title>Ayesha Dental Clinic</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 
@@ -29,7 +29,7 @@ const FB_PATH = "adc/v1";   // all data lives at this path in the DB
 let firebaseApp, db, fbEnabled = false;
 
 try {
-  firebaseApp = initializeApp(FIREBASE_CONFIG);
+  firebaseApp = initializeApp(firebaseConfig);
   db = getDatabase(firebaseApp);
   fbEnabled = FIREBASE_CONFIG.apiKey !== "YOUR_API_KEY";
 } catch(e) {
