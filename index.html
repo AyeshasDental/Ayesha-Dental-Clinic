@@ -103,6 +103,293 @@ input[type=checkbox]{accent-color:#14508a;width:15px;height:15px;cursor:pointer}
   .no-print{display:none!important}
 }
 
+/* ── MOBILE DRAWER — hidden off-screen by default on ALL screen sizes ── */
+/* On desktop it simply never becomes visible (display:none on desktop) */
+.sidebar-mobile{
+  display:none;             /* hidden on desktop */
+  position:fixed;left:0;top:0;bottom:0;width:240px;z-index:300;
+  background:#070f1a;border-right:1px solid #1e3650;
+  flex-direction:column;height:100vh;overflow-y:auto;
+  transform:translateX(-100%);transition:transform .22s cubic-bezier(.4,0,.2,1)
+}
+.sidebar-mobile.open{transform:translateX(0)}
+
+/* ── OVERLAY — hidden on desktop ── */
+.mob-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);
+  z-index:200;opacity:0;transition:opacity .22s;pointer-events:none
+}
+.mob-overlay.open{opacity:1;pointer-events:auto}
+
+/* ── BOTTOM NAV — hidden on desktop ── */
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:150;background:#070f1a;border-top:1px solid #1e3650;padding:0;height:58px;align-items:stretch}
+.bottom-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:none;color:#4a7090;cursor:pointer;font-size:.6rem;font-weight:600;padding:4px 2px;transition:color .15s;-webkit-tap-highlight-color:transparent}
+.bottom-nav-item.active{color:#4a90d9}
+.bottom-nav-item svg{flex-shrink:0}
+.bnav-more{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:none;color:#4a7090;cursor:pointer;font-size:.6rem;font-weight:600;padding:4px 2px;-webkit-tap-highlight-color:transparent}
+
+/* ── MOBILE HEADER — hidden on desktop ── */
+.mob-header{display:none;align-items:center;justify-content:space-between;padding:.7rem 1rem;background:#070f1a;border-bottom:1px solid #1e3650;position:sticky;top:0;z-index:100;height:52px;flex-shrink:0}
+
+/* ── RESPONSIVE MEDIA QUERIES ── */
+@media(max-width:768px){
+  /* Show mobile chrome */
+  .mob-header{display:flex}
+  .bottom-nav{display:flex}
+  .mob-overlay{display:block}
+
+  /* Show the mobile drawer (still off-screen until .open) */
+  .sidebar-mobile{display:flex}
+
+  /* Hide desktop sidebar */
+  .sidebar-desktop{display:none!important}
+
+  /* Toast above bottom nav */
+  #toast{bottom:70px}
+
+  /* Main content fills screen, padded for bottom nav */
+  .main-content{
+    padding:.9rem .9rem 72px!important;
+    max-height:unset!important;
+    overflow-y:auto!important
+  }
+
+  /* Responsive grids */
+  .grid-4{grid-template-columns:1fr 1fr!important}
+  .grid-3{grid-template-columns:1fr 1fr!important}
+  .grid-2{grid-template-columns:1fr!important}
+  .grid-chart{grid-template-columns:1fr!important}
+  .grid-auto{grid-template-columns:1fr!important}
+  .hide-mobile{display:none!important}
+
+  /* Modals full-screen on mobile */
+  .modal-box{max-width:100%!important;max-height:100vh!important;border-radius:18px 18px 0 0!important;margin-top:auto}
+  .modal-wrap{align-items:flex-end!important;padding:0!important}
+
+  /* Stat cards smaller text */
+  .stat-value{font-size:1.1rem!important}
+
+  /* Card list items stack better */
+  .card-row{flex-direction:column!important;align-items:flex-start!important;gap:.6rem!important}
+  .card-row-actions{width:100%;justify-content:flex-end}
+
+  /* Tables scroll horizontally */
+  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+  /* Form inputs full width */
+  .form-grid{grid-template-columns:1fr!important}
+
+  /* Line items compact on mobile */
+  .lineitems-grid{grid-template-columns:2fr 1fr 1fr 1fr 24px!important}
+}
+
+@media(max-width:400px){
+  .grid-4{grid-template-columns:1fr 1fr!important}
+  .stat-value{font-size:1rem!important}
+  .bottom-nav-item{font-size:.55rem}
+}
+
+/* Smooth tap on touch */
+button,a{-webkit-tap-highlight-color:transparent}
+input,select,textarea{font-size:16px!important} /* Prevents iOS zoom */
+@media(min-width:769px){input,select,textarea{font-size:.86rem!important}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<iframe id="print-frame"></iframe>
+<div id="toast"></div>
+
+<!-- React + Babel -->
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script type="text/babel" data-presets="react">
+const {useState,useEffect,useRef,useCallback,useMemo}=React;
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TOAST HELPER
+// ═══════════════════════════════════════════════════════════════════════════════
+function showToast(msg, isErr=false){
+  const el=document.createElement('div');
+  el.className='toast-item'+(isErr?' err':'');
+  el.textContent=msg;
+  document.getElementById('toast').appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';setTimeout(()=>el.remove(),400)},3000);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SEED DATA
+// ═══════════════════════════════════════════════════════════════════════════════
+const today=()=>new Date().toISOString().split('T')[0];
+const uid=p=>`${p}-${Date.now().toString(36).toUpperCase().slice(-5)}`;
+const fmtPKR=n=>`Rs. ${Number(n||0).toLocaleString('en-PK')}`;
+const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const LSKEY='adc_offline_v4';
+
+const ALL_PERMS=['view_dashboard','view_patients','edit_patients','view_appointments','edit_appointments','view_history','edit_history','view_prescriptions','edit_prescriptions','view_invoices','edit_invoices','pay_invoices','view_receipts','edit_receipts','view_bills','edit_bills','pay_bills','view_expenses','edit_expenses','view_reports','view_doctors','edit_doctors','view_suppliers','edit_suppliers','view_users','edit_users','view_settings','edit_settings'];
+const DEFAULT_PERMS={
+  admin:ALL_PERMS,
+  doctor:['view_dashboard','view_patients','edit_patients','view_appointments','edit_appointments','view_history','edit_history','view_prescriptions','edit_prescriptions','view_invoices'],
+  accountant:['view_dashboard','view_invoices','edit_invoices','pay_invoices','view_receipts','edit_receipts','view_bills','edit_bills','pay_bills','view_expenses','edit_expenses','view_reports','view_suppliers'],
+  receptionist:['view_dashboard','view_patients','edit_patients','view_appointments','edit_appointments'],
+};
+
+const SEED={
+  _ts:Date.now(),
+  settings:{clinicName:'Ayesha Dental Clinic',tagline:'Your Smile, Our Priority',phone:'0311-1234567',email:'info@ayeshadental.pk',address:'Plot 12, Blue Area, Islamabad',logo:null,invoiceLayout:'classic',receiptLayout:'classic',invoiceColor:'#1565a0',invoiceFooter:'Thank you for choosing Ayesha Dental Clinic.',receiptFooter:'Payment received. Thank you!',currency:'Rs.',taxLabel:'GST',showLogoOnDocs:true},
+  rolePermissions:DEFAULT_PERMS,
+  users:[
+    {id:1,name:'Dr. Ayesha Khan',email:'ayesha@clinic.com',password:'admin123',role:'admin',active:true},
+    {id:2,name:'Dr. Bilal Ahmed',email:'bilal@clinic.com',password:'doctor123',role:'doctor',active:true},
+    {id:3,name:'Ali (Accountant)',email:'ali@clinic.com',password:'accounts123',role:'accountant',active:true},
+    {id:4,name:'Sara Receptionist',email:'sara@clinic.com',password:'reception123',role:'receptionist',active:true},
+  ],
+  patients:[
+    {id:1,name:'Fatima Malik',age:32,phone:'0311-2345678',email:'fatima@email.com',gender:'Female',address:'House 12, Gulshan-e-Iqbal, Karachi',bloodGroup:'B+',photo:null,createdAt:'2026-01-10',notes:'Allergic to Penicillin'},
+    {id:2,name:'Ahmed Raza',age:45,phone:'0321-9876543',email:'ahmed.raza@email.com',gender:'Male',address:'Plot 7, F-8/3, Islamabad',bloodGroup:'O+',photo:null,createdAt:'2026-02-05',notes:''},
+    {id:3,name:'Sana Iqbal',age:27,phone:'0333-5678901',email:'sana.i@email.com',gender:'Female',address:'Flat 3B, DHA Phase 5, Lahore',bloodGroup:'A+',photo:null,createdAt:'2026-03-15',notes:'Diabetic patient'},
+  ],
+  appointments:[
+    {id:1,patientId:1,doctorId:1,date:'2026-04-18',time:'10:00',duration:60,treatment:'Root Canal Follow-up',status:'scheduled',notes:''},
+    {id:2,patientId:2,doctorId:2,date:'2026-04-18',time:'11:30',duration:30,treatment:'Checkup',status:'scheduled',notes:''},
+    {id:3,patientId:3,doctorId:1,date:'2026-04-17',time:'09:00',duration:45,treatment:'Filling',status:'completed',notes:'Done successfully'},
+  ],
+  history:[
+    {id:1,patientId:1,doctorId:1,date:'2026-04-10',treatment:'Root Canal - Tooth #16',notes:'Patient tolerated procedure well.',fee:8000},
+    {id:2,patientId:1,doctorId:1,date:'2026-02-15',treatment:'Scaling & Polishing',notes:'Mild gum inflammation.',fee:2500},
+    {id:3,patientId:2,doctorId:2,date:'2026-03-28',treatment:'Tooth Extraction #28',notes:'Uneventful extraction.',fee:3500},
+    {id:4,patientId:3,doctorId:1,date:'2026-04-14',treatment:'Composite Filling x2',notes:'Upper molars.',fee:5000},
+  ],
+  prescriptions:[
+    {id:1,patientId:1,doctorId:1,date:'2026-04-10',medications:[{name:'Amoxicillin',dose:'500mg',frequency:'3x daily',duration:'5 days'},{name:'Ibuprofen',dose:'400mg',frequency:'As needed',duration:'3 days'}],notes:'Take with food.',nextVisit:'2026-04-24'},
+    {id:2,patientId:2,doctorId:2,date:'2026-03-28',medications:[{name:'Metronidazole',dose:'400mg',frequency:'2x daily',duration:'5 days'}],notes:'Avoid hot food.',nextVisit:'2026-04-11'},
+  ],
+  invoices:[
+    {id:'INV-001',patientId:1,doctorId:1,date:'2026-04-10',dueDate:'2026-04-20',items:[{desc:'Root Canal Treatment',qty:1,rate:8000}],subtotal:8000,tax:0,discount:0,total:8000,paid:5500,status:'partial',notes:'',payments:[{id:'P1',date:'2026-04-10',amount:5500,method:'Cash',note:'Initial payment'}]},
+    {id:'INV-002',patientId:2,doctorId:2,date:'2026-03-28',dueDate:'2026-04-07',items:[{desc:'Tooth Extraction',qty:1,rate:3500}],subtotal:3500,tax:0,discount:0,total:3500,paid:3500,status:'paid',notes:'',payments:[{id:'P2',date:'2026-03-28',amount:3500,method:'Card',note:''}]},
+    {id:'INV-003',patientId:3,doctorId:1,date:'2026-04-14',dueDate:'2026-04-24',items:[{desc:'Composite Filling',qty:2,rate:2500}],subtotal:5000,tax:0,discount:0,total:5000,paid:4000,status:'partial',notes:'',payments:[{id:'P3',date:'2026-04-14',amount:4000,method:'Bank Transfer',note:''}]},
+  ],
+  receipts:[
+    {id:'RCP-001',patientId:1,invoiceId:'INV-001',date:'2026-04-10',amount:5500,method:'Cash',notes:'Partial payment'},
+    {id:'RCP-002',patientId:2,invoiceId:'INV-002',date:'2026-03-28',amount:3500,method:'Card',notes:''},
+    {id:'RCP-003',patientId:3,invoiceId:'INV-003',date:'2026-04-14',amount:4000,method:'Bank Transfer',notes:''},
+  ],
+  bills:[
+    {id:'BILL-001',supplierId:1,date:'2026-04-01',dueDate:'2026-04-15',items:[{desc:'Dental Supplies - Monthly Stock',qty:1,rate:12000}],subtotal:12000,tax:0,total:12000,paid:12000,status:'paid',notes:'',payments:[{id:'BP1',date:'2026-04-01',amount:12000,method:'Bank Transfer',note:''}]},
+    {id:'BILL-002',supplierId:2,date:'2026-04-05',dueDate:'2026-04-05',items:[{desc:'Clinic Rent - April',qty:1,rate:35000}],subtotal:35000,tax:0,total:35000,paid:35000,status:'paid',notes:'',payments:[]},
+    {id:'BILL-003',supplierId:1,date:'2026-04-15',dueDate:'2026-04-30',items:[{desc:'X-Ray Films & Consumables',qty:1,rate:8500}],subtotal:8500,tax:0,total:8500,paid:0,status:'unpaid',notes:'',payments:[]},
+  ],
+  expenses:[
+    {id:'EXP-001',category:'Utilities',date:'2026-04-02',description:'Electricity Bill',amount:4500,paymentMethod:'Bank Transfer',notes:''},
+    {id:'EXP-002',category:'Salaries',date:'2026-04-01',description:'Staff Salaries - April',amount:85000,paymentMethod:'Bank Transfer',notes:''},
+    {id:'EXP-003',category:'Maintenance',date:'2026-04-08',description:'Dental Chair Servicing',amount:3500,paymentMethod:'Cash',notes:''},
+  ],
+  doctors:[
+    {id:1,name:'Dr. Ayesha Khan',specialization:'Endodontist',phone:'0311-1111111',email:'ayesha@clinic.com',fee:1000,active:true},
+    {id:2,name:'Dr. Bilal Ahmed',specialization:'Orthodontist',phone:'0322-2222222',email:'bilal@clinic.com',fee:1500,active:true},
+  ],
+  suppliers:[
+    {id:1,name:'MedDent Supplies Co.',contact:'Ali Broker',phone:'0300-1234567',email:'meddent@supplier.com',address:'Saddar, Karachi',category:'Dental Supplies'},
+    {id:2,name:'City Plaza Properties',contact:'Mr. Tariq',phone:'0321-9998888',email:'cityplaza@prop.com',address:'F-7, Islamabad',category:'Real Estate'},
+  ],
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ICONS
+// ═══════════════════════════════════════════════════════════════════════════════
+const IC={
+  dash:<><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></>,
+  patients:<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></>,
+  calendar:<><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></>,
+  history:<><polyline points="12 8 12 12 14 14"/><path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"/></>,
+  rx:<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></>,
+  invoice:<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></>,
+  receipt:<><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></>,
+  bill:<><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></>,
+  expense:<><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></>,
+  reports:<><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></>,
+  doctors:<><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></>,
+  suppliers:<><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></>,
+  users:<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></>,
+  settings:<><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></>,
+  plus:<><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>,
+  search:<><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>,
+  close:<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>,
+  edit:<><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></>,
+  trash:<><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4h6v2"/></>,
+  print:<><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></>,
+  eye:<><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>,
+  logout:<><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><poly  console.error("❌ Firebase init failed:", e.message);
+}
+
+window.__fb = {
+  enabled: true,
+
+  async load() {
+    try {
+      const snap = await get(ref(db, FB_PATH));
+      console.log("📥 Firebase load:", snap.exists() ? "data found" : "empty");
+      return snap.exists() ? snap.val() : null;
+    } catch(e) {
+      console.error("FB load error:", e);
+      return null;
+    }
+  },
+
+  async save(data) {
+    try {
+      await set(ref(db, FB_PATH), data);
+    } catch(e) {
+      console.error("FB save error:", e);
+    }
+  },
+
+  subscribe(callback) {
+    const unsubscribe = onValue(ref(db, FB_PATH), snap => {
+      if(snap.exists()) callback(snap.val());
+    }, err => {
+      console.error("FB subscribe error:", err);
+    });
+    return unsubscribe;
+  }
+};
+</script>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#040b13;font-family:'DM Sans',sans-serif;color:#e0f0fc}
+input,select,textarea,button{font-family:'DM Sans',sans-serif}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:#040b13}
+::-webkit-scrollbar-thumb{background:#1e3650;border-radius:4px}
+select option{background:#0b1520}
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+input[type=color]{padding:0;border:none;border-radius:6px;cursor:pointer}
+#root{height:100%}
+
+/* Print iframe (hidden) */
+#print-frame{position:fixed;left:-9999px;top:-9999px;width:800px;height:600px;border:none}
+
+/* Sync indicator */
+@keyframes spin{to{transform:rotate(360deg)}}
+.syncing{animation:spin .8s linear infinite}
+
+/* Toast — above bottom nav on mobile */
+#toast{position:fixed;bottom:1.5rem;right:1rem;z-index:9999;display:flex;flex-direction:column;gap:.4rem;pointer-events:none}
+.toast-item{background:#0d3a22;border:1px solid #38c878;color:#38c878;padding:.55rem 1rem;border-radius:10px;font-size:.8rem;font-weight:600;transition:opacity .3s;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+.toast-item.err{background:#3a0d0d;border-color:#d95050;color:#d95050}
+
+/* Checkbox styling */
+input[type=checkbox]{accent-color:#14508a;width:15px;height:15px;cursor:pointer}
+
+/* Print styles */
+@media print{
+  body{background:#fff!important;color:#111!important}
+  .no-print{display:none!important}
+}
+
 /* ── MOBILE OVERLAY SIDEBAR ── */
 .mob-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;opacity:0;transition:opacity .22s}
 .mob-overlay.open{opacity:1}
