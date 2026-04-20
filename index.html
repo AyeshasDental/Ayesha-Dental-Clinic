@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Ayesha Dental Clinic — Management System</title>
+<title>Ayesha Dental Clinic</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 
@@ -236,66 +236,43 @@ const DEFAULT_PERMS={
   receptionist:['view_dashboard','view_patients','edit_patients','view_appointments','edit_appointments'],
 };
 
-const SEED={
-  _ts:Date.now(),
-  settings:{clinicName:'Ayesha Dental Clinic',tagline:'Your Smile, Our Priority',phone:'0311-1234567',email:'info@ayeshadental.pk',address:'Plot 12, Blue Area, Islamabad',logo:null,invoiceLayout:'classic',receiptLayout:'classic',invoiceColor:'#1565a0',invoiceFooter:'Thank you for choosing Ayesha Dental Clinic.',receiptFooter:'Payment received. Thank you!',currency:'Rs.',taxLabel:'GST',showLogoOnDocs:true},
-  rolePermissions:DEFAULT_PERMS,
-  users:[
-    {id:1,name:'Dr. Ayesha Khan',email:'ayesha@clinic.com',password:'admin123',role:'admin',active:true},
-    {id:2,name:'Dr. Bilal Ahmed',email:'bilal@clinic.com',password:'doctor123',role:'doctor',active:true},
-    {id:3,name:'Ali (Accountant)',email:'ali@clinic.com',password:'accounts123',role:'accountant',active:true},
-    {id:4,name:'Sara Receptionist',email:'sara@clinic.com',password:'reception123',role:'receptionist',active:true},
+const SEED = {
+  _ts: Date.now(),
+  settings: {
+    clinicName: 'Ayesha Dental Clinic',
+    tagline: 'Your Smile, Our Priority',
+    phone: '0311-1579491',
+    email: 'Ayeshasdental@gmail.com',
+    address: 'Shop # 4,Iftikhar Arcade, Ghouri Town Main Road, Ghouri Town, Islamabad',
+    logo: null,
+    invoiceLayout: 'classic',
+    receiptLayout: 'classic',
+    invoiceColor: '#1565a0',
+    invoiceFooter: 'Thank you for choosing Ayesha Dental Clinic.',
+    receiptFooter: 'Payment received. Thank you!',
+    currency: 'Rs.',
+    taxLabel: 'GST',
+    showLogoOnDocs: true
+  },
+  rolePermissions: DEFAULT_PERMS,
+  // Keep at least one admin user so you can log in!
+  users: [
+    { id: 1, name: 'Dr. Ayesha Hassan', email: 'ayesha@clinic.com', password: 'admin123', role: 'admin', active: true },
   ],
-  patients:[
-    {id:1,name:'Fatima Malik',age:32,phone:'0311-2345678',email:'fatima@email.com',gender:'Female',address:'House 12, Gulshan-e-Iqbal, Karachi',bloodGroup:'B+',photo:null,createdAt:'2026-01-10',notes:'Allergic to Penicillin'},
-    {id:2,name:'Ahmed Raza',age:45,phone:'0321-9876543',email:'ahmed.raza@email.com',gender:'Male',address:'Plot 7, F-8/3, Islamabad',bloodGroup:'O+',photo:null,createdAt:'2026-02-05',notes:''},
-    {id:3,name:'Sana Iqbal',age:27,phone:'0333-5678901',email:'sana.i@email.com',gender:'Female',address:'Flat 3B, DHA Phase 5, Lahore',bloodGroup:'A+',photo:null,createdAt:'2026-03-15',notes:'Diabetic patient'},
+  // Emptying the operational data
+  patients: [],
+  appointments: [],
+  history: [],
+  prescriptions: [],
+  invoices: [],
+  receipts: [],
+  bills: [],
+  expenses: [],
+  doctors: [
+     { id: 1, name: 'Dr. Ayesha Hassan', specialization: 'BDS', phone: '0311-1579491', email: 'ayesha@clinic.com', fee: 1000, active: true }
   ],
-  appointments:[
-    {id:1,patientId:1,doctorId:1,date:'2026-04-18',time:'10:00',duration:60,treatment:'Root Canal Follow-up',status:'scheduled',notes:''},
-    {id:2,patientId:2,doctorId:2,date:'2026-04-18',time:'11:30',duration:30,treatment:'Checkup',status:'scheduled',notes:''},
-    {id:3,patientId:3,doctorId:1,date:'2026-04-17',time:'09:00',duration:45,treatment:'Filling',status:'completed',notes:'Done successfully'},
-  ],
-  history:[
-    {id:1,patientId:1,doctorId:1,date:'2026-04-10',treatment:'Root Canal - Tooth #16',notes:'Patient tolerated procedure well.',fee:8000},
-    {id:2,patientId:1,doctorId:1,date:'2026-02-15',treatment:'Scaling & Polishing',notes:'Mild gum inflammation.',fee:2500},
-    {id:3,patientId:2,doctorId:2,date:'2026-03-28',treatment:'Tooth Extraction #28',notes:'Uneventful extraction.',fee:3500},
-    {id:4,patientId:3,doctorId:1,date:'2026-04-14',treatment:'Composite Filling x2',notes:'Upper molars.',fee:5000},
-  ],
-  prescriptions:[
-    {id:1,patientId:1,doctorId:1,date:'2026-04-10',medications:[{name:'Amoxicillin',dose:'500mg',frequency:'3x daily',duration:'5 days'},{name:'Ibuprofen',dose:'400mg',frequency:'As needed',duration:'3 days'}],notes:'Take with food.',nextVisit:'2026-04-24'},
-    {id:2,patientId:2,doctorId:2,date:'2026-03-28',medications:[{name:'Metronidazole',dose:'400mg',frequency:'2x daily',duration:'5 days'}],notes:'Avoid hot food.',nextVisit:'2026-04-11'},
-  ],
-  invoices:[
-    {id:'INV-001',patientId:1,doctorId:1,date:'2026-04-10',dueDate:'2026-04-20',items:[{desc:'Root Canal Treatment',qty:1,rate:8000}],subtotal:8000,tax:0,discount:0,total:8000,paid:5500,status:'partial',notes:'',payments:[{id:'P1',date:'2026-04-10',amount:5500,method:'Cash',note:'Initial payment'}]},
-    {id:'INV-002',patientId:2,doctorId:2,date:'2026-03-28',dueDate:'2026-04-07',items:[{desc:'Tooth Extraction',qty:1,rate:3500}],subtotal:3500,tax:0,discount:0,total:3500,paid:3500,status:'paid',notes:'',payments:[{id:'P2',date:'2026-03-28',amount:3500,method:'Card',note:''}]},
-    {id:'INV-003',patientId:3,doctorId:1,date:'2026-04-14',dueDate:'2026-04-24',items:[{desc:'Composite Filling',qty:2,rate:2500}],subtotal:5000,tax:0,discount:0,total:5000,paid:4000,status:'partial',notes:'',payments:[{id:'P3',date:'2026-04-14',amount:4000,method:'Bank Transfer',note:''}]},
-  ],
-  receipts:[
-    {id:'RCP-001',patientId:1,invoiceId:'INV-001',date:'2026-04-10',amount:5500,method:'Cash',notes:'Partial payment'},
-    {id:'RCP-002',patientId:2,invoiceId:'INV-002',date:'2026-03-28',amount:3500,method:'Card',notes:''},
-    {id:'RCP-003',patientId:3,invoiceId:'INV-003',date:'2026-04-14',amount:4000,method:'Bank Transfer',notes:''},
-  ],
-  bills:[
-    {id:'BILL-001',supplierId:1,date:'2026-04-01',dueDate:'2026-04-15',items:[{desc:'Dental Supplies - Monthly Stock',qty:1,rate:12000}],subtotal:12000,tax:0,total:12000,paid:12000,status:'paid',notes:'',payments:[{id:'BP1',date:'2026-04-01',amount:12000,method:'Bank Transfer',note:''}]},
-    {id:'BILL-002',supplierId:2,date:'2026-04-05',dueDate:'2026-04-05',items:[{desc:'Clinic Rent - April',qty:1,rate:35000}],subtotal:35000,tax:0,total:35000,paid:35000,status:'paid',notes:'',payments:[]},
-    {id:'BILL-003',supplierId:1,date:'2026-04-15',dueDate:'2026-04-30',items:[{desc:'X-Ray Films & Consumables',qty:1,rate:8500}],subtotal:8500,tax:0,total:8500,paid:0,status:'unpaid',notes:'',payments:[]},
-  ],
-  expenses:[
-    {id:'EXP-001',category:'Utilities',date:'2026-04-02',description:'Electricity Bill',amount:4500,paymentMethod:'Bank Transfer',notes:''},
-    {id:'EXP-002',category:'Salaries',date:'2026-04-01',description:'Staff Salaries - April',amount:85000,paymentMethod:'Bank Transfer',notes:''},
-    {id:'EXP-003',category:'Maintenance',date:'2026-04-08',description:'Dental Chair Servicing',amount:3500,paymentMethod:'Cash',notes:''},
-  ],
-  doctors:[
-    {id:1,name:'Dr. Ayesha Khan',specialization:'Endodontist',phone:'0311-1111111',email:'ayesha@clinic.com',fee:1000,active:true},
-    {id:2,name:'Dr. Bilal Ahmed',specialization:'Orthodontist',phone:'0322-2222222',email:'bilal@clinic.com',fee:1500,active:true},
-  ],
-  suppliers:[
-    {id:1,name:'MedDent Supplies Co.',contact:'Ali Broker',phone:'0300-1234567',email:'meddent@supplier.com',address:'Saddar, Karachi',category:'Dental Supplies'},
-    {id:2,name:'City Plaza Properties',contact:'Mr. Tariq',phone:'0321-9998888',email:'cityplaza@prop.com',address:'F-7, Islamabad',category:'Real Estate'},
-  ],
+  suppliers: [],
 };
-
 // ═══════════════════════════════════════════════════════════════════════════════
 // ICONS
 // ═══════════════════════════════════════════════════════════════════════════════
