@@ -1378,7 +1378,7 @@ const Suppliers=({db,setDb,can})=>{
   const[form,setForm]=useState(blank);
   const save=()=>{if(!form.name)return;if(editId)setDb(x=>({...x,suppliers:x.suppliers.map(s=>s.id===editId?{...form,id:editId}:s)}));else setDb(x=>({...x,suppliers:[...x.suppliers,{...form,id:Date.now()}]}));setModal(false);setForm(blank);setEditId(null);};
   const del=id=>{if(window.confirm('Remove?'))setDb(x=>({...x,suppliers:x.suppliers.filter(s=>s.id!==id)}));};
-  const cats=['Dental Supplies','Equipment','Real Estate','Utilities','Services','Other'];
+  const cats=['Dental Supplies','Equipment','Real Estate','Utilities','Lab Services','Employee','Other'];
   return(<div>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.1rem'}}>
       <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:'1.55rem',color:'#e0f0fc',margin:0}}>Suppliers</h2>
