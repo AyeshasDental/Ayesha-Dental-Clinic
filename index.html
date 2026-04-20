@@ -7,15 +7,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 
-<!-- ═══ FIREBASE SDK ═══ -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, onValue, set, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// FIREBASE CONFIG — Replace these values with your own Firebase project config
-// Instructions to get these values are at the bottom of this file
-// ─────────────────────────────────────────────────────────────────────────────
 const FIREBASE_CONFIG = {
   apiKey:            "AIzaSyBW5cg6Q8KgpArkSxu5jAD8A1DnVgZNE2Q",
   authDomain:        "ayesha-dental-clinicmanagement.firebaseapp.com",
@@ -27,45 +22,31 @@ const FIREBASE_CONFIG = {
 };
 
 const FB_PATH = "adc/v1";
-let db;
-
+let fbdb;
 try {
   const app = initializeApp(FIREBASE_CONFIG);
-  db = getDatabase(app);
-  console.log("✅ Firebase initialized successfully");
+  fbdb = getDatabase(app);
+  console.log("✅ Firebase initialized");
 } catch(e) {
   console.error("❌ Firebase init failed:", e.message);
 }
 
 window.__fb = {
-  enabled: true,
-
+  enabled: !!fbdb,
   async load() {
     try {
-      const snap = await get(ref(db, FB_PATH));
-      console.log("📥 Firebase load:", snap.exists() ? "data found" : "empty");
+      const snap = await get(ref(fbdb, FB_PATH));
       return snap.exists() ? snap.val() : null;
-    } catch(e) {
-      console.error("FB load error:", e);
-      return null;
-    }
+    } catch(e) { console.error("FB load error:", e); return null; }
   },
-
   async save(data) {
-    try {
-      await set(ref(db, FB_PATH), data);
-    } catch(e) {
-      console.error("FB save error:", e);
-    }
+    try { await set(ref(fbdb, FB_PATH), data); }
+    catch(e) { console.error("FB save error:", e); }
   },
-
-  subscribe(callback) {
-    const unsubscribe = onValue(ref(db, FB_PATH), snap => {
-      if(snap.exists()) callback(snap.val());
-    }, err => {
-      console.error("FB subscribe error:", err);
-    });
-    return unsubscribe;
+  subscribe(cb) {
+    return onValue(ref(fbdb, FB_PATH), snap => {
+      if(snap.exists()) cb(snap.val());
+    }, e => console.error("FB sub error:", e));
   }
 };
 </script>
@@ -81,117 +62,38 @@ select option{background:#0b1520}
 input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 input[type=color]{padding:0;border:none;border-radius:6px;cursor:pointer}
 #root{height:100%}
-
-/* Print iframe (hidden) */
 #print-frame{position:fixed;left:-9999px;top:-9999px;width:800px;height:600px;border:none}
-
-/* Sync indicator */
 @keyframes spin{to{transform:rotate(360deg)}}
 .syncing{animation:spin .8s linear infinite}
-
-/* Toast — above bottom nav on mobile */
 #toast{position:fixed;bottom:1.5rem;right:1rem;z-index:9999;display:flex;flex-direction:column;gap:.4rem;pointer-events:none}
 .toast-item{background:#0d3a22;border:1px solid #38c878;color:#38c878;padding:.55rem 1rem;border-radius:10px;font-size:.8rem;font-weight:600;transition:opacity .3s;box-shadow:0 4px 20px rgba(0,0,0,.4)}
 .toast-item.err{background:#3a0d0d;border-color:#d95050;color:#d95050}
-
-/* Checkbox styling */
 input[type=checkbox]{accent-color:#14508a;width:15px;height:15px;cursor:pointer}
-
-/* Print styles */
-@media print{
-  body{background:#fff!important;color:#111!important}
-  .no-print{display:none!important}
-}
-
-/* ── MOBILE DRAWER — hidden off-screen by default on ALL screen sizes ── */
-/* On desktop it simply never becomes visible (display:none on desktop) */
-.sidebar-mobile{
-  display:none;             /* hidden on desktop */
-  position:fixed;left:0;top:0;bottom:0;width:240px;z-index:300;
-  background:#070f1a;border-right:1px solid #1e3650;
-  flex-direction:column;height:100vh;overflow-y:auto;
-  transform:translateX(-100%);transition:transform .22s cubic-bezier(.4,0,.2,1)
-}
+@media print{body{background:#fff!important;color:#111!important}.no-print{display:none!important}}
+.sidebar-mobile{display:none;position:fixed;left:0;top:0;bottom:0;width:240px;z-index:300;background:#070f1a;border-right:1px solid #1e3650;flex-direction:column;height:100vh;overflow-y:auto;transform:translateX(-100%);transition:transform .22s cubic-bezier(.4,0,.2,1)}
 .sidebar-mobile.open{transform:translateX(0)}
-
-/* ── OVERLAY — hidden on desktop ── */
-.mob-overlay{
-  display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);
-  z-index:200;opacity:0;transition:opacity .22s;pointer-events:none
-}
+.mob-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;opacity:0;transition:opacity .22s;pointer-events:none}
 .mob-overlay.open{opacity:1;pointer-events:auto}
-
-/* ── BOTTOM NAV — hidden on desktop ── */
 .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:150;background:#070f1a;border-top:1px solid #1e3650;padding:0;height:58px;align-items:stretch}
 .bottom-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:none;color:#4a7090;cursor:pointer;font-size:.6rem;font-weight:600;padding:4px 2px;transition:color .15s;-webkit-tap-highlight-color:transparent}
 .bottom-nav-item.active{color:#4a90d9}
-.bottom-nav-item svg{flex-shrink:0}
 .bnav-more{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:none;color:#4a7090;cursor:pointer;font-size:.6rem;font-weight:600;padding:4px 2px;-webkit-tap-highlight-color:transparent}
-
-/* ── MOBILE HEADER — hidden on desktop ── */
 .mob-header{display:none;align-items:center;justify-content:space-between;padding:.7rem 1rem;background:#070f1a;border-bottom:1px solid #1e3650;position:sticky;top:0;z-index:100;height:52px;flex-shrink:0}
-
-/* ── RESPONSIVE MEDIA QUERIES ── */
 @media(max-width:768px){
-  /* Show mobile chrome */
-  .mob-header{display:flex}
-  .bottom-nav{display:flex}
-  .mob-overlay{display:block}
-
-  /* Show the mobile drawer (still off-screen until .open) */
-  .sidebar-mobile{display:flex}
-
-  /* Hide desktop sidebar */
+  .mob-header{display:flex}.bottom-nav{display:flex}.mob-overlay{display:block}.sidebar-mobile{display:flex}
   .sidebar-desktop{display:none!important}
-
-  /* Toast above bottom nav */
   #toast{bottom:70px}
-
-  /* Main content fills screen, padded for bottom nav */
-  .main-content{
-    padding:.9rem .9rem 72px!important;
-    max-height:unset!important;
-    overflow-y:auto!important
-  }
-
-  /* Responsive grids */
-  .grid-4{grid-template-columns:1fr 1fr!important}
-  .grid-3{grid-template-columns:1fr 1fr!important}
-  .grid-2{grid-template-columns:1fr!important}
-  .grid-chart{grid-template-columns:1fr!important}
-  .grid-auto{grid-template-columns:1fr!important}
+  .main-content{padding:.9rem .9rem 72px!important;max-height:unset!important;overflow-y:auto!important}
+  .grid-4{grid-template-columns:1fr 1fr!important}.grid-3{grid-template-columns:1fr 1fr!important}
+  .grid-2{grid-template-columns:1fr!important}.grid-chart{grid-template-columns:1fr!important}
   .hide-mobile{display:none!important}
-
-  /* Modals full-screen on mobile */
   .modal-box{max-width:100%!important;max-height:100vh!important;border-radius:18px 18px 0 0!important;margin-top:auto}
   .modal-wrap{align-items:flex-end!important;padding:0!important}
-
-  /* Stat cards smaller text */
-  .stat-value{font-size:1.1rem!important}
-
-  /* Card list items stack better */
-  .card-row{flex-direction:column!important;align-items:flex-start!important;gap:.6rem!important}
-  .card-row-actions{width:100%;justify-content:flex-end}
-
-  /* Tables scroll horizontally */
   .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-
-  /* Form inputs full width */
-  .form-grid{grid-template-columns:1fr!important}
-
-  /* Line items compact on mobile */
-  .lineitems-grid{grid-template-columns:2fr 1fr 1fr 1fr 24px!important}
 }
-
-@media(max-width:400px){
-  .grid-4{grid-template-columns:1fr 1fr!important}
-  .stat-value{font-size:1rem!important}
-  .bottom-nav-item{font-size:.55rem}
-}
-
-/* Smooth tap on touch */
+@media(max-width:400px){.grid-4{grid-template-columns:1fr 1fr!important}.bottom-nav-item{font-size:.55rem}}
 button,a{-webkit-tap-highlight-color:transparent}
-input,select,textarea{font-size:16px!important} /* Prevents iOS zoom */
+input,select,textarea{font-size:16px!important}
 @media(min-width:769px){input,select,textarea{font-size:.86rem!important}}
 </style>
 </head>
@@ -199,35 +101,48 @@ input,select,textarea{font-size:16px!important} /* Prevents iOS zoom */
 <div id="root"></div>
 <iframe id="print-frame"></iframe>
 <div id="toast"></div>
-
-<!-- React + Babel -->
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
 <script type="text/babel" data-presets="react">
-const {useState,useEffect,useRef,useCallback,useMemo}=React;
+const {useState,useEffect,useRef,useCallback}=React;
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// TOAST HELPER
-// ═══════════════════════════════════════════════════════════════════════════════
-function showToast(msg, isErr=false){
+// ─── HELPERS ───────────────────────────────────────────────────────────────
+function showToast(msg,isErr=false){
   const el=document.createElement('div');
   el.className='toast-item'+(isErr?' err':'');
   el.textContent=msg;
   document.getElementById('toast').appendChild(el);
   setTimeout(()=>{el.style.opacity='0';setTimeout(()=>el.remove(),400)},3000);
 }
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// SEED DATA
-// ═══════════════════════════════════════════════════════════════════════════════
 const today=()=>new Date().toISOString().split('T')[0];
 const uid=p=>`${p}-${Date.now().toString(36).toUpperCase().slice(-5)}`;
 const fmtPKR=n=>`Rs. ${Number(n||0).toLocaleString('en-PK')}`;
 const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const LSKEY='adc_offline_v4';
 
+// ─── SAFE DB: ensures all arrays exist even if Firebase returns partial data ─
+function safeDb(raw){
+  if(!raw) return null;
+  return {
+    ...raw,
+    _ts: raw._ts||Date.now(),
+    settings: raw.settings||{},
+    rolePermissions: raw.rolePermissions||DEFAULT_PERMS,
+    users:         Array.isArray(raw.users)?raw.users:[],
+    patients:      Array.isArray(raw.patients)?raw.patients:[],
+    appointments:  Array.isArray(raw.appointments)?raw.appointments:[],
+    history:       Array.isArray(raw.history)?raw.history:[],
+    prescriptions: Array.isArray(raw.prescriptions)?raw.prescriptions:[],
+    invoices:      Array.isArray(raw.invoices)?raw.invoices:[],
+    receipts:      Array.isArray(raw.receipts)?raw.receipts:[],
+    bills:         Array.isArray(raw.bills)?raw.bills:[],
+    expenses:      Array.isArray(raw.expenses)?raw.expenses:[],
+    doctors:       Array.isArray(raw.doctors)?raw.doctors:[],
+    suppliers:     Array.isArray(raw.suppliers)?raw.suppliers:[],
+  };
+}
+
+// ─── PERMISSIONS ────────────────────────────────────────────────────────────
 const ALL_PERMS=['view_dashboard','view_patients','edit_patients','view_appointments','edit_appointments','view_history','edit_history','view_prescriptions','edit_prescriptions','view_invoices','edit_invoices','pay_invoices','view_receipts','edit_receipts','view_bills','edit_bills','pay_bills','view_expenses','edit_expenses','view_reports','view_doctors','edit_doctors','view_suppliers','edit_suppliers','view_users','edit_users','view_settings','edit_settings'];
 const DEFAULT_PERMS={
   admin:ALL_PERMS,
@@ -236,46 +151,18 @@ const DEFAULT_PERMS={
   receptionist:['view_dashboard','view_patients','edit_patients','view_appointments','edit_appointments'],
 };
 
-const SEED = {
-  _ts: Date.now(),
-  settings: {
-    clinicName: 'Ayesha Dental Clinic',
-    tagline: 'Your Smile, Our Priority',
-    phone: '0311-1579491',
-    email: 'Ayeshasdental@gmail.com',
-    address: 'Shop # 4,Iftikhar Arcade, Ghouri Town Main Road, Ghouri Town, Islamabad',
-    logo: null,
-    invoiceLayout: 'classic',
-    receiptLayout: 'classic',
-    invoiceColor: '#1565a0',
-    invoiceFooter: 'Thank you for choosing Ayesha Dental Clinic.',
-    receiptFooter: 'Payment received. Thank you!',
-    currency: 'Rs.',
-    taxLabel: 'GST',
-    showLogoOnDocs: true
-  },
-  rolePermissions: DEFAULT_PERMS,
-  // Keep at least one admin user so you can log in!
-  users: [
-    { id: 1, name: 'Dr. Ayesha Hassan', email: 'ayesha@clinic.com', password: 'admin123', role: 'admin', active: true },
-  ],
-  // Emptying the operational data
-  patients: [],
-  appointments: [],
-  history: [],
-  prescriptions: [],
-  invoices: [],
-  receipts: [],
-  bills: [],
-  expenses: [],
-  doctors: [
-     { id: 1, name: 'Dr. Ayesha Hassan', specialization: 'BDS', phone: '0311-1579491', email: 'ayesha@clinic.com', fee: 1000, active: true }
-  ],
-  suppliers: [],
+// ─── INITIAL SEED (only pushed to Firebase if database is empty) ─────────────
+const SEED={
+  _ts:Date.now(),
+  settings:{clinicName:'Ayesha Dental Clinic',tagline:'Your Smile, Our Priority',phone:'0311-1579491',email:'ayeshasdental@gmail.com',address:'Shop # 4, Iftikhar Arcade, Ghouri Town Main Road, Ghouri Town, Islamabad',logo:null,invoiceLayout:'classic',receiptLayout:'classic',invoiceColor:'#1565a0',invoiceFooter:'Thank you for choosing Ayesha Dental Clinic.',receiptFooter:'Payment received. Thank you!',currency:'Rs.',taxLabel:'GST',showLogoOnDocs:true},
+  rolePermissions:DEFAULT_PERMS,
+  users:[{id:1,name:'Dr. Ayesha Hassan',email:'ayesha@clinic.com',password:'admin123',role:'admin',active:true}],
+  patients:[],appointments:[],history:[],prescriptions:[],invoices:[],receipts:[],bills:[],expenses:[],
+  doctors:[{id:1,name:'Dr. Ayesha Hassan',specialization:'BDS',phone:'0311-1579491',email:'ayeshasdental@gmail.com',fee:1000,active:true}],
+  suppliers:[],
 };
-// ═══════════════════════════════════════════════════════════════════════════════
-// ICONS
-// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── ICONS ──────────────────────────────────────────────────────────────────
 const IC={
   dash:<><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></>,
   patients:<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></>,
@@ -297,12 +184,11 @@ const IC={
   edit:<><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></>,
   trash:<><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4h6v2"/></>,
   print:<><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></>,
-  eye:<><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>,
   logout:<><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></>,
   tooth:<path d="M12 2C8.5 2 5 4.5 5 8c0 2.5 1 4.5 1.5 7S8 22 10 22c1.5 0 2-2 2-2s.5 2 2 2c2 0 3-5 3.5-7S19 10.5 19 8c0-3.5-3.5-6-7-6z"/>,
   menu:<><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></>,
   wifi:<><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></>,
-  wifioff:<><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a11 11 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.56 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></>,
+  wifioff:<><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.56 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></>,
   check:<><polyline points="20 6 9 17 4 12"/></>,
   alert:<><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></>,
   camera:<><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></>,
@@ -311,18 +197,13 @@ const IC={
   sync:<><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></>,
   download:<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></>,
   upload:<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></>,
-  wifi:<><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></>,
-  wifioff:<><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.56 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></>,
-  key:<><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></>,
 };
 const Icon=({n,s=16})=><svg width={s} height={s} fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">{IC[n]}</svg>;
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// SHARED COMPONENTS
-// ═══════════════════════════════════════════════════════════════════════════════
-const Modal=({title,onClose,children,wide,extraWide})=>(
+// ─── SHARED COMPONENTS ──────────────────────────────────────────────────────
+const Modal=({title,onClose,children,wide})=>(
   <div className="modal-wrap" style={{position:'fixed',inset:0,background:'rgba(0,0,0,.7)',zIndex:3000,display:'flex',alignItems:'flex-start',justifyContent:'center',padding:'1.5rem 1rem',overflowY:'auto'}}>
-    <div className="modal-box" style={{background:'#0b1520',border:'1px solid #1e3650',borderRadius:18,width:'100%',maxWidth:extraWide?980:wide?700:580,boxShadow:'0 32px 80px rgba(0,0,0,.7)',flexShrink:0}}>
+    <div className="modal-box" style={{background:'#0b1520',border:'1px solid #1e3650',borderRadius:18,width:'100%',maxWidth:wide?700:580,boxShadow:'0 32px 80px rgba(0,0,0,.7)',flexShrink:0}}>
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'1rem 1.4rem',borderBottom:'1px solid #1e3650',position:'sticky',top:0,background:'#0b1520',zIndex:1,borderRadius:'18px 18px 0 0'}}>
         <h3 style={{margin:0,color:'#e0f0fc',fontFamily:"'Cormorant Garamond',serif",fontSize:'1.05rem',fontWeight:700}}>{title}</h3>
         <button onClick={onClose} style={{background:'none',border:'none',color:'#4a7090',cursor:'pointer',padding:6,display:'flex',borderRadius:6}}><Icon n="close" s={20}/></button>
@@ -331,40 +212,35 @@ const Modal=({title,onClose,children,wide,extraWide})=>(
     </div>
   </div>
 );
-
 const Btn=({children,icon,ghost,sm,danger,success,onClick,full,disabled,style:sx})=>(
   <button onClick={onClick} disabled={disabled}
     style={{background:ghost?'transparent':danger?'#6b1515':success?'#0d4a2a':'#14508a',border:ghost?'1px solid #1e3650':'none',borderRadius:sm?7:10,padding:sm?'0.3rem 0.62rem':'0.56rem 1.1rem',color:ghost?'#5a80a0':'#fff',cursor:disabled?'not-allowed':'pointer',display:'inline-flex',alignItems:'center',gap:6,fontWeight:600,fontSize:sm?'0.77rem':'0.85rem',whiteSpace:'nowrap',width:full?'100%':undefined,justifyContent:full?'center':undefined,opacity:disabled?.5:1,transition:'all .15s',...sx}}>
     {icon&&<Icon n={icon} s={sm?13:15}/>}{children}
   </button>
 );
-
-const FI=({label,type='text',value,onChange,required,placeholder,readOnly,half})=>(
+const FI=({label,type='text',value,onChange,required,placeholder,readOnly})=>(
   <div style={{marginBottom:'0.82rem'}}>
     {label&&<label style={{display:'block',color:'#4a7090',fontSize:'.69rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:5}}>{label}{required&&' *'}</label>}
     <input type={type} value={value||''} onChange={e=>onChange&&onChange(e.target.value)} placeholder={placeholder} readOnly={readOnly}
-      style={{width:'100%',background:readOnly?'#070e18':'#060c16',border:'1px solid #1e3650',borderRadius:8,padding:'.5rem .8rem',color:'#e0f0fc',fontSize:'.85rem',outline:'none',boxSizing:'border-box',opacity:readOnly?.6:1}}/>
+      style={{width:'100%',background:readOnly?'#070e18':'#060c16',border:'1px solid #1e3650',borderRadius:8,padding:'.5rem .8rem',color:'#e0f0fc',outline:'none',boxSizing:'border-box',opacity:readOnly?.6:1}}/>
   </div>
 );
-
 const FS=({label,value,onChange,options})=>(
   <div style={{marginBottom:'0.82rem'}}>
     {label&&<label style={{display:'block',color:'#4a7090',fontSize:'.69rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:5}}>{label}</label>}
     <select value={value||''} onChange={e=>onChange(e.target.value)}
-      style={{width:'100%',background:'#060c16',border:'1px solid #1e3650',borderRadius:8,padding:'.5rem .8rem',color:'#e0f0fc',fontSize:'.85rem',outline:'none',boxSizing:'border-box'}}>
+      style={{width:'100%',background:'#060c16',border:'1px solid #1e3650',borderRadius:8,padding:'.5rem .8rem',color:'#e0f0fc',outline:'none',boxSizing:'border-box'}}>
       {options.map(o=><option key={o.value??o} value={o.value??o}>{o.label??o}</option>)}
     </select>
   </div>
 );
-
 const FTA=({label,value,onChange,rows=3})=>(
   <div style={{marginBottom:'0.82rem'}}>
     {label&&<label style={{display:'block',color:'#4a7090',fontSize:'.69rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:5}}>{label}</label>}
     <textarea value={value||''} onChange={e=>onChange(e.target.value)} rows={rows}
-      style={{width:'100%',background:'#060c16',border:'1px solid #1e3650',borderRadius:8,padding:'.5rem .8rem',color:'#e0f0fc',fontSize:'.85rem',outline:'none',resize:'vertical',boxSizing:'border-box'}}/>
+      style={{width:'100%',background:'#060c16',border:'1px solid #1e3650',borderRadius:8,padding:'.5rem .8rem',color:'#e0f0fc',outline:'none',resize:'vertical',boxSizing:'border-box'}}/>
   </div>
 );
-
 const Card=({children,style:sx,onClick})=>(
   <div onClick={onClick} style={{background:'#090f1a',border:'1px solid #1e3650',borderRadius:14,padding:'.95rem 1.15rem',cursor:onClick?'pointer':undefined,transition:'border-color .15s',...sx}}
     onMouseEnter={e=>{if(onClick)e.currentTarget.style.borderColor='#1460a0'}}
@@ -372,7 +248,6 @@ const Card=({children,style:sx,onClick})=>(
     {children}
   </div>
 );
-
 const StatCard=({label,value,color='#4a90d9',icon})=>(
   <Card>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
@@ -382,213 +257,66 @@ const StatCard=({label,value,color='#4a90d9',icon})=>(
     </div>
   </Card>
 );
-
 const Badge=({status})=>{
   const m={paid:['#0b3a22','#38c878'],partial:['#3a2600','#e8a030'],unpaid:['#380a0a','#d95050'],scheduled:['#0a1f3a','#4a90d9'],completed:['#0b3a22','#38c878'],cancelled:['#280a0a','#d95050']};
   const[bg,col]=m[status]||['#1e3650','#7aaec8'];
   return <span style={{background:bg,color:col,borderRadius:6,padding:'2px 9px',fontSize:'.69rem',fontWeight:700,textTransform:'capitalize',whiteSpace:'nowrap'}}>{status}</span>;
 };
-
 const G2=({children,style:sx})=><div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0 .75rem',...sx}}>{children}</div>;
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// PRINT ENGINE — uses hidden iframe to avoid popup blockers
-// ═══════════════════════════════════════════════════════════════════════════════
-function doPrint(htmlContent){
+// ─── PRINT ENGINE ────────────────────────────────────────────────────────────
+function doPrint(html){
   const frame=document.getElementById('print-frame');
   const doc=frame.contentDocument||frame.contentWindow.document;
-  doc.open();
-  doc.write(htmlContent);
-  doc.close();
-  // Wait for images to load then print
-  frame.contentWindow.onload=()=>{
-    setTimeout(()=>frame.contentWindow.print(),400);
-  };
+  doc.open();doc.write(html);doc.close();
+  frame.contentWindow.onload=()=>setTimeout(()=>frame.contentWindow.print(),400);
   setTimeout(()=>frame.contentWindow.print(),800);
 }
-
 function buildPrintHtml(type,doc,db){
-  const s=db.settings||SEED.settings;
-  const ac=s.invoiceColor||'#1565a0';
+  const s=db.settings||SEED.settings;const ac=s.invoiceColor||'#1565a0';
   const layout=type==='receipt'?s.receiptLayout:s.invoiceLayout;
   const footer=type==='receipt'?s.receiptFooter:s.invoiceFooter;
   const pt=db.patients?.find(p=>p.id===doc.patientId);
   const sp=db.suppliers?.find(x=>x.id===doc.supplierId);
   const dr=db.doctors?.find(d=>d.id===doc.doctorId);
   const entity=pt||sp;
-
-  const logoHtml=s.showLogoOnDocs&&s.logo
-    ?`<img src="${s.logo}" style="height:55px;object-fit:contain;border-radius:6px"/>`
-    :`<div style="width:55px;height:55px;background:${ac};border-radius:10px;display:inline-flex;align-items:center;justify-content:center;color:white;font-size:22px;font-weight:bold;font-family:Georgia,serif">${(s.clinicName||'A').charAt(0)}</div>`;
-
-  const css=`*{box-sizing:border-box;margin:0;padding:0}body{font-family:Georgia,serif;color:#111;background:#fff}
-    table{width:100%;border-collapse:collapse;margin:14px 0}
-    th{background:#f0f5fb;padding:8px 11px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#444;border-bottom:2px solid #dde5ef}
-    td{padding:8px 11px;border-bottom:1px solid #edf1f6;font-size:13px}
-    .amt{text-align:right}.tr-total td{font-weight:700;font-size:14px;background:#f8fbff;border-top:2px solid #ccd5e0}
-    .footer{margin-top:40px;text-align:center;color:#888;font-size:11px;border-top:1px solid #e0e5ea;padding-top:14px}
-    .badge-paid,.badge-partial,.badge-unpaid{padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700}
-    .badge-paid{color:#1a7340;background:#e0f4ea}.badge-partial{color:#7a4d00;background:#fff3e0}.badge-unpaid{color:#8b0000;background:#fde8e8}
-    @media print{body{padding:0!important}.no-print{display:none}}`;
-
-  let billToHtml='';
-  if(entity) billToHtml=`<div style="margin-bottom:18px;padding:12px 14px;background:#f8f9fb;border-radius:8px;font-size:13px"><strong>${type==='bill'?'Supplier':'Bill To'}:</strong><br/><strong style="font-size:15px">${entity.name||'—'}</strong>${entity.phone?`<br/>${entity.phone}`:''}${entity.address?`<br/>${entity.address}`:''}${dr?`<br/>Doctor: ${dr.name}`:''}</div>`;
-
-  let itemsHtml='';
-  if(doc.items?.length){
-    itemsHtml=`<table><thead><tr><th>#</th><th>Description</th><th>Qty</th><th>Rate</th><th class="amt">Amount</th></tr></thead><tbody>
-      ${doc.items.map((it,i)=>`<tr><td>${i+1}</td><td>${it.desc||''}</td><td>${it.qty}</td><td>${fmtPKR(it.rate)}</td><td class="amt"><strong>${fmtPKR(Number(it.qty)*Number(it.rate))}</strong></td></tr>`).join('')}
-    </tbody></table>`;
-  }
-
-  let totalsHtml='';
-  if(doc.amount!=null){
-    totalsHtml=`<div style="border:2px solid #111;border-radius:10px;padding:20px;text-align:center;margin:18px 0"><div style="font-size:32px;font-weight:800;color:#1a7340;font-family:Georgia,serif">${fmtPKR(doc.amount)}</div><div style="color:#555;margin-top:4px;font-size:13px">Amount Received · ${doc.method||''}</div></div>`;
-  } else if(doc.total!=null){
-    const bal=doc.total-(doc.paid||0);
-    totalsHtml=`<div style="display:flex;justify-content:flex-end;margin-top:8px"><table style="width:260px;margin:0"><tbody>
-      ${doc.subtotal!=null?`<tr><td>Subtotal</td><td class="amt">${fmtPKR(doc.subtotal)}</td></tr>`:''}
-      ${doc.tax?`<tr><td>${s.taxLabel||'Tax'}</td><td class="amt">${fmtPKR(doc.tax)}</td></tr>`:''}
-      ${doc.discount?`<tr><td>Discount</td><td class="amt">- ${fmtPKR(doc.discount)}</td></tr>`:''}
-      <tr class="tr-total"><td>TOTAL</td><td class="amt">${fmtPKR(doc.total)}</td></tr>
-      ${doc.paid!=null?`<tr><td>Paid</td><td class="amt" style="color:#1a7340"><strong>${fmtPKR(doc.paid)}</strong></td></tr>`:''}
-      ${bal>0?`<tr class="tr-total"><td>Balance Due</td><td class="amt" style="color:#8b0000">${fmtPKR(bal)}</td></tr>`:''}
-    </tbody></table></div>`;
-  }
-
-  let paymentsHtml='';
-  if(doc.payments?.length){
-    paymentsHtml=`<div style="margin-top:18px"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#666;margin-bottom:6px;font-weight:700">Payment History</div>
-      <table><thead><tr><th>Date</th><th>Method</th><th>Note</th><th class="amt">Amount</th></tr></thead><tbody>
-      ${doc.payments.map(p=>`<tr><td>${p.date}</td><td>${p.method}</td><td>${p.note||'—'}</td><td class="amt" style="color:#1a7340;font-weight:700">${fmtPKR(p.amount)}</td></tr>`).join('')}
-      </tbody></table></div>`;
-  }
-
-  const headerClinic=`<div style="display:flex;gap:14px;align-items:center">${logoHtml}<div>
-    <div style="font-size:21px;font-weight:bold;color:${ac};font-family:Georgia,serif">${s.clinicName||''}</div>
-    ${s.tagline?`<div style="color:#666;font-size:12px">${s.tagline}</div>`:''}
-    <div style="color:#666;font-size:12px">${[s.phone,s.email].filter(Boolean).join(' · ')}</div>
-    ${s.address?`<div style="color:#666;font-size:12px">${s.address}</div>`:''}
-  </div></div>`;
-
-  const headerDoc=`<div style="text-align:right">
-    <div style="font-size:26px;font-weight:800;color:${ac};font-family:Georgia,serif">${doc.id||type.toUpperCase()}</div>
-    <div style="color:#666;font-size:12px;margin-top:3px">Date: ${doc.date}</div>
-    ${doc.dueDate?`<div style="color:#666;font-size:12px">Due: ${doc.dueDate}</div>`:''}
-    ${doc.status?`<div style="margin-top:6px"><span class="badge-${doc.status}">${doc.status}</span></div>`:''}
-  </div>`;
-
+  const logoHtml=s.showLogoOnDocs&&s.logo?`<img src="${s.logo}" style="height:55px;object-fit:contain;border-radius:6px"/>`:
+    `<div style="width:55px;height:55px;background:${ac};border-radius:10px;display:inline-flex;align-items:center;justify-content:center;color:white;font-size:22px;font-weight:bold;font-family:Georgia,serif">${(s.clinicName||'A').charAt(0)}</div>`;
+  const css=`*{box-sizing:border-box;margin:0;padding:0}body{font-family:Georgia,serif;color:#111;background:#fff}table{width:100%;border-collapse:collapse;margin:14px 0}th{background:#f0f5fb;padding:8px 11px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#444;border-bottom:2px solid #dde5ef}td{padding:8px 11px;border-bottom:1px solid #edf1f6;font-size:13px}.amt{text-align:right}.tr-total td{font-weight:700;font-size:14px;background:#f8fbff;border-top:2px solid #ccd5e0}.footer{margin-top:40px;text-align:center;color:#888;font-size:11px;border-top:1px solid #e0e5ea;padding-top:14px}.badge-paid{color:#1a7340;background:#e0f4ea;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700}.badge-partial{color:#7a4d00;background:#fff3e0;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700}.badge-unpaid{color:#8b0000;background:#fde8e8;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700}@media print{body{padding:0!important}}`;
+  let billTo='';if(entity)billTo=`<div style="margin-bottom:18px;padding:12px 14px;background:#f8f9fb;border-radius:8px;font-size:13px"><strong>${type==='bill'?'Supplier':'Bill To'}:</strong><br/><strong style="font-size:15px">${entity.name||'—'}</strong>${entity.phone?`<br/>${entity.phone}`:''}${entity.address?`<br/>${entity.address}`:''}${dr?`<br/>Doctor: ${dr.name}`:''}</div>`;
+  let items='';if(doc.items?.length){items=`<table><thead><tr><th>#</th><th>Description</th><th>Qty</th><th>Rate</th><th class="amt">Amount</th></tr></thead><tbody>${doc.items.map((it,i)=>`<tr><td>${i+1}</td><td>${it.desc||''}</td><td>${it.qty}</td><td>${fmtPKR(it.rate)}</td><td class="amt"><strong>${fmtPKR(Number(it.qty)*Number(it.rate))}</strong></td></tr>`).join('')}</tbody></table>`;}
+  let totals='';
+  if(doc.amount!=null){totals=`<div style="border:2px solid #111;border-radius:10px;padding:20px;text-align:center;margin:18px 0"><div style="font-size:32px;font-weight:800;color:#1a7340;font-family:Georgia,serif">${fmtPKR(doc.amount)}</div><div style="color:#555;margin-top:4px;font-size:13px">Amount Received · ${doc.method||''}</div></div>`;}
+  else if(doc.total!=null){const bal=doc.total-(doc.paid||0);totals=`<div style="display:flex;justify-content:flex-end;margin-top:8px"><table style="width:260px;margin:0"><tbody>${doc.subtotal!=null?`<tr><td>Subtotal</td><td class="amt">${fmtPKR(doc.subtotal)}</td></tr>`:''}${doc.tax?`<tr><td>${s.taxLabel||'Tax'}</td><td class="amt">${fmtPKR(doc.tax)}</td></tr>`:''}${doc.discount?`<tr><td>Discount</td><td class="amt">- ${fmtPKR(doc.discount)}</td></tr>`:''}<tr class="tr-total"><td>TOTAL</td><td class="amt">${fmtPKR(doc.total)}</td></tr>${doc.paid!=null?`<tr><td>Paid</td><td class="amt" style="color:#1a7340"><strong>${fmtPKR(doc.paid)}</strong></td></tr>`:''}${bal>0?`<tr class="tr-total"><td>Balance Due</td><td class="amt" style="color:#8b0000">${fmtPKR(bal)}</td></tr>`:''}</tbody></table></div>`;}
+  let payments='';if(doc.payments?.length){payments=`<div style="margin-top:18px"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#666;margin-bottom:6px;font-weight:700">Payment History</div><table><thead><tr><th>Date</th><th>Method</th><th>Note</th><th class="amt">Amount</th></tr></thead><tbody>${doc.payments.map(p=>`<tr><td>${p.date}</td><td>${p.method}</td><td>${p.note||'—'}</td><td class="amt" style="color:#1a7340;font-weight:700">${fmtPKR(p.amount)}</td></tr>`).join('')}</tbody></table></div>`;}
+  const hClinic=`<div style="display:flex;gap:14px;align-items:center">${logoHtml}<div><div style="font-size:21px;font-weight:bold;color:${ac};font-family:Georgia,serif">${s.clinicName||''}</div>${s.tagline?`<div style="color:#666;font-size:12px">${s.tagline}</div>`:''}<div style="color:#666;font-size:12px">${[s.phone,s.email].filter(Boolean).join(' · ')}</div>${s.address?`<div style="color:#666;font-size:12px">${s.address}</div>`:''}</div></div>`;
+  const hDoc=`<div style="text-align:right"><div style="font-size:26px;font-weight:800;color:${ac};font-family:Georgia,serif">${doc.id||type.toUpperCase()}</div><div style="color:#666;font-size:12px;margin-top:3px">Date: ${doc.date}</div>${doc.dueDate?`<div style="color:#666;font-size:12px">Due: ${doc.dueDate}</div>`:''}${doc.status?`<div style="margin-top:6px"><span class="badge-${doc.status}">${doc.status}</span></div>`:''}</div>`;
   let body='';
-  if(layout==='modern'){
-    body=`<div style="background:${ac};color:white;padding:24px 32px;display:flex;justify-content:space-between;align-items:center">
-      ${s.showLogoOnDocs&&s.logo?`<img src="${s.logo}" style="height:44px;object-fit:contain;border-radius:6px;background:white;padding:3px"/>`:``}
-      <div><div style="font-size:19px;font-weight:bold">${s.clinicName}</div><div style="opacity:.8;font-size:11px">${s.address||''}</div></div>
-      <div style="text-align:right"><div style="font-size:26px;font-weight:800;opacity:.9">${doc.id||''}</div><div style="opacity:.8;font-size:11px">Date: ${doc.date}</div></div>
-    </div>
-    <div style="padding:24px 32px">${billToHtml}${itemsHtml}${totalsHtml}${paymentsHtml}${doc.notes?`<p style="color:#555;font-size:12px;margin-top:12px">Notes: ${doc.notes}</p>`:''}</div>`;
-  } else if(layout==='minimal'){
-    body=`<div style="padding:28px;max-width:620px;margin:auto"><div style="margin-bottom:18px"><div style="font-size:17px;font-weight:bold">${s.clinicName}</div><div style="color:#666;font-size:11px">${s.address||''}</div></div>
-    <div style="display:flex;justify-content:space-between;border-bottom:2px solid #111;padding-bottom:12px;margin-bottom:18px">
-      <div style="font-size:22px;font-weight:800">${type.toUpperCase()}</div>
-      <div style="font-size:12px;color:#555"><div>${doc.id||''}</div><div>Date: ${doc.date}</div></div>
-    </div>${billToHtml}${itemsHtml}${totalsHtml}${paymentsHtml}</div>`;
-  } else {
-    // classic
-    body=`<div style="padding:28px">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:16px;border-bottom:3px solid ${ac}">${headerClinic}${headerDoc}</div>
-      ${billToHtml}${itemsHtml}${totalsHtml}${paymentsHtml}
-      ${doc.notes?`<p style="color:#555;font-size:12px;margin-top:12px">Notes: ${doc.notes}</p>`:''}
-    </div>`;
-  }
-
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>${type} ${doc.id||''}</title><style>${css}</style></head><body>
-    ${body}
-    <div class="footer" style="padding:14px 28px 28px">${footer||''}<br/>Generated on ${new Date().toLocaleString()}</div>
-  </body></html>`;
+  if(layout==='modern'){body=`<div style="background:${ac};color:white;padding:24px 32px;display:flex;justify-content:space-between;align-items:center">${s.showLogoOnDocs&&s.logo?`<img src="${s.logo}" style="height:44px;object-fit:contain;border-radius:6px;background:white;padding:3px"/>`:''}<div><div style="font-size:19px;font-weight:bold">${s.clinicName}</div><div style="opacity:.8;font-size:11px">${s.address||''}</div></div><div style="text-align:right"><div style="font-size:26px;font-weight:800;opacity:.9">${doc.id||''}</div><div style="opacity:.8;font-size:11px">Date: ${doc.date}</div></div></div><div style="padding:24px 32px">${billTo}${items}${totals}${payments}${doc.notes?`<p style="color:#555;font-size:12px;margin-top:12px">Notes: ${doc.notes}</p>`:''}</div>`;}
+  else if(layout==='minimal'){body=`<div style="padding:28px;max-width:620px;margin:auto"><div style="margin-bottom:18px"><div style="font-size:17px;font-weight:bold">${s.clinicName}</div><div style="color:#666;font-size:11px">${s.address||''}</div></div><div style="display:flex;justify-content:space-between;border-bottom:2px solid #111;padding-bottom:12px;margin-bottom:18px"><div style="font-size:22px;font-weight:800">${type.toUpperCase()}</div><div style="font-size:12px;color:#555"><div>${doc.id||''}</div><div>Date: ${doc.date}</div></div></div>${billTo}${items}${totals}${payments}</div>`;}
+  else{body=`<div style="padding:28px"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:16px;border-bottom:3px solid ${ac}">${hClinic}${hDoc}</div>${billTo}${items}${totals}${payments}${doc.notes?`<p style="color:#555;font-size:12px;margin-top:12px">Notes: ${doc.notes}</p>`:''}</div>`;}
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>${type} ${doc.id||''}</title><style>${css}</style></head><body>${body}<div class="footer" style="padding:14px 28px 28px">${footer||''}<br/>Generated on ${new Date().toLocaleString()}</div></body></html>`;
 }
-
-function printDoc(type,doc,db){
-  doPrint(buildPrintHtml(type,doc,db));
-}
-
+function printDoc(type,doc,db){doPrint(buildPrintHtml(type,doc,db));}
 function printExpense(exp,db){
-  const s=db.settings||SEED.settings;
-  const ac=s.invoiceColor||'#1565a0';
-  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Expense ${exp.id}</title>
-    <style>*{box-sizing:border-box}body{font-family:Georgia,serif;padding:28px;color:#111;max-width:540px;margin:auto}
-    .header{font-size:19px;font-weight:bold;color:${ac};margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid ${ac}}
-    table{width:100%;border-collapse:collapse}td{padding:9px 8px;border-bottom:1px solid #eee;font-size:13px}td:first-child{color:#555;font-size:11px;text-transform:uppercase;width:140px}
-    .footer{margin-top:28px;text-align:center;color:#888;font-size:11px;border-top:1px solid #ddd;padding-top:14px}@media print{body{padding:0}}</style>
-    </head><body>
-    <div class="header">${s.clinicName} — Expense Record</div>
-    <table><tr><td>Expense ID</td><td><strong>${exp.id}</strong></td></tr>
-    <tr><td>Date</td><td>${exp.date}</td></tr><tr><td>Category</td><td>${exp.category}</td></tr>
-    <tr><td>Description</td><td><strong>${exp.description}</strong></td></tr>
-    <tr><td>Amount</td><td><strong style="font-size:20px;color:#8b0000">${fmtPKR(exp.amount)}</strong></td></tr>
-    <tr><td>Method</td><td>${exp.paymentMethod}</td></tr>
-    ${exp.notes?`<tr><td>Notes</td><td>${exp.notes}</td></tr>`:''}</table>
-    <div class="footer">Generated ${new Date().toLocaleString()}</div>
-    </body></html>`;
-  doPrint(html);
+  const s=db.settings||SEED.settings;const ac=s.invoiceColor||'#1565a0';
+  doPrint(`<!DOCTYPE html><html><head><meta charset="UTF-8"/><style>*{box-sizing:border-box}body{font-family:Georgia,serif;padding:28px;color:#111;max-width:540px;margin:auto}.h{font-size:19px;font-weight:bold;color:${ac};margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid ${ac}}table{width:100%;border-collapse:collapse}td{padding:9px 8px;border-bottom:1px solid #eee;font-size:13px}td:first-child{color:#555;font-size:11px;text-transform:uppercase;width:140px}.f{margin-top:28px;text-align:center;color:#888;font-size:11px;border-top:1px solid #ddd;padding-top:14px}@media print{body{padding:0}}</style></head><body><div class="h">${s.clinicName} — Expense Record</div><table><tr><td>ID</td><td><strong>${exp.id}</strong></td></tr><tr><td>Date</td><td>${exp.date}</td></tr><tr><td>Category</td><td>${exp.category}</td></tr><tr><td>Description</td><td><strong>${exp.description}</strong></td></tr><tr><td>Amount</td><td><strong style="font-size:20px;color:#8b0000">${fmtPKR(exp.amount)}</strong></td></tr><tr><td>Method</td><td>${exp.paymentMethod}</td></tr>${exp.notes?`<tr><td>Notes</td><td>${exp.notes}</td></tr>`:''}</table><div class="f">Generated ${new Date().toLocaleString()}</div></body></html>`);
 }
-
 function printPrescription(rx,db){
-  const s=db.settings||SEED.settings;
-  const ac=s.invoiceColor||'#1565a0';
-  const pt=db.patients?.find(p=>p.id===rx.patientId);
-  const dr=db.doctors?.find(d=>d.id===rx.doctorId);
-  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Prescription</title>
-    <style>*{box-sizing:border-box}body{font-family:Georgia,serif;padding:32px;color:#111}
-    h2{color:${ac}}table{width:100%;border-collapse:collapse;margin:12px 0}th{background:#f0f5fb;padding:8px;font-size:11px;text-transform:uppercase}td{padding:8px;border-bottom:1px solid #eee;font-size:13px}
-    .footer{margin-top:40px;text-align:center;color:#888;font-size:11px;border-top:1px solid #ddd;padding-top:14px}@media print{body{padding:0}}</style>
-    </head><body>
-    <div style="display:flex;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:2px solid ${ac}">
-    <div>${s.showLogoOnDocs&&s.logo?`<img src="${s.logo}" style="height:44px;margin-bottom:6px;display:block;border-radius:6px;object-fit:contain"/>`:''}<strong style="font-size:18px;color:${ac}">${s.clinicName}</strong><br/><span style="font-size:11px;color:#666">${s.address||''}</span></div>
-    <div style="text-align:right"><div style="font-size:20px;font-weight:bold">℞ Prescription</div><div style="font-size:12px;color:#666">Date: ${rx.date}<br/>Patient: ${pt?.name||'—'}<br/>Doctor: ${dr?.name||'—'}</div></div></div>
-    <table><thead><tr><th>Medication</th><th>Dose</th><th>Frequency</th><th>Duration</th></tr></thead><tbody>
-    ${rx.medications.map(m=>`<tr><td><strong>${m.name}</strong></td><td>${m.dose}</td><td>${m.frequency}</td><td>${m.duration}</td></tr>`).join('')}
-    </tbody></table>
-    ${rx.notes?`<p style="margin-top:12px"><strong>Instructions:</strong> ${rx.notes}</p>`:''}
-    ${rx.nextVisit?`<p><strong>Next Visit:</strong> ${rx.nextVisit}</p>`:''}
-    <div style="margin-top:56px;display:flex;justify-content:flex-end"><div style="text-align:center;border-top:1px solid #555;padding-top:8px;min-width:180px;font-size:12px">Doctor's Signature</div></div>
-    <div class="footer">Generated ${new Date().toLocaleString()}</div>
-    </body></html>`;
-  doPrint(html);
+  const s=db.settings||SEED.settings;const ac=s.invoiceColor||'#1565a0';
+  const pt=db.patients?.find(p=>p.id===rx.patientId);const dr=db.doctors?.find(d=>d.id===rx.doctorId);
+  doPrint(`<!DOCTYPE html><html><head><meta charset="UTF-8"/><style>*{box-sizing:border-box}body{font-family:Georgia,serif;padding:32px;color:#111}table{width:100%;border-collapse:collapse;margin:12px 0}th{background:#f0f5fb;padding:8px;font-size:11px;text-transform:uppercase}td{padding:8px;border-bottom:1px solid #eee;font-size:13px}.f{margin-top:40px;text-align:center;color:#888;font-size:11px;border-top:1px solid #ddd;padding-top:14px}@media print{body{padding:0}}</style></head><body><div style="display:flex;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:2px solid ${ac}"><div><strong style="font-size:18px;color:${ac}">${s.clinicName}</strong><br/><span style="font-size:11px;color:#666">${s.address||''}</span></div><div style="text-align:right"><div style="font-size:20px;font-weight:bold">℞ Prescription</div><div style="font-size:12px;color:#666">Date: ${rx.date}<br/>Patient: ${pt?.name||'—'}<br/>Doctor: ${dr?.name||'—'}</div></div></div><table><thead><tr><th>Medication</th><th>Dose</th><th>Frequency</th><th>Duration</th></tr></thead><tbody>${rx.medications.map(m=>`<tr><td><strong>${m.name}</strong></td><td>${m.dose}</td><td>${m.frequency}</td><td>${m.duration}</td></tr>`).join('')}</tbody></table>${rx.notes?`<p style="margin-top:12px"><strong>Instructions:</strong> ${rx.notes}</p>`:''}${rx.nextVisit?`<p><strong>Next Visit:</strong> ${rx.nextVisit}</p>`:''}<div style="margin-top:56px;display:flex;justify-content:flex-end"><div style="text-align:center;border-top:1px solid #555;padding-top:8px;min-width:180px;font-size:12px">Doctor's Signature</div></div><div class="f">Generated ${new Date().toLocaleString()}</div></body></html>`);
 }
-
 function printPLReport(db){
-  const s=db.settings||SEED.settings;
-  const ac=s.invoiceColor||'#1565a0';
-  const rev=db.invoices.reduce((a,i)=>a+i.paid,0);
-  const cogs=db.bills.reduce((a,b)=>a+b.paid,0);
-  const opex=db.expenses.reduce((a,e)=>a+e.amount,0);
-  const gross=rev-cogs; const net=gross-opex;
-  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>P&L Statement</title>
-    <style>body{font-family:Georgia,serif;padding:32px;color:#111}table{width:100%;border-collapse:collapse;margin:10px 0}th{background:#f0f5fb;padding:8px 11px;text-align:left;font-size:11px;text-transform:uppercase}td{padding:8px 11px;border-bottom:1px solid #eee;font-size:13px}.tr-total td{font-weight:700;border-top:2px solid #ccd5e0;font-size:14px;background:#f8fbff}.amt{text-align:right}.footer{margin-top:40px;text-align:center;color:#888;font-size:11px;border-top:1px solid #ddd;padding-top:14px}@media print{body{padding:0}}</style>
-    </head><body>
-    <div style="display:flex;justify-content:space-between;margin-bottom:24px;padding-bottom:14px;border-bottom:2px solid ${ac}">
-    <strong style="font-size:20px;color:${ac}">${s.clinicName}</strong>
-    <div style="text-align:right"><strong style="font-size:16px">Profit & Loss Statement</strong><br/><span style="color:#666;font-size:12px">Generated: ${new Date().toLocaleDateString()}</span></div></div>
-    <table><thead><tr><th>Item</th><th class="amt">Amount</th></tr></thead><tbody>
-    <tr><td colspan="2"><strong>REVENUE</strong></td></tr>
-    <tr><td style="padding-left:20px">Patient Collections</td><td class="amt">${fmtPKR(rev)}</td></tr>
-    <tr class="tr-total"><td>Total Revenue</td><td class="amt">${fmtPKR(rev)}</td></tr>
-    <tr><td colspan="2"><strong>COST OF GOODS SOLD</strong></td></tr>
-    <tr><td style="padding-left:20px">Supplier Bills Paid</td><td class="amt">${fmtPKR(cogs)}</td></tr>
-    <tr class="tr-total"><td>Gross Profit</td><td class="amt">${fmtPKR(gross)}</td></tr>
-    <tr><td colspan="2"><strong>OPERATING EXPENSES</strong></td></tr>
-    ${db.expenses.map(e=>`<tr><td style="padding-left:20px">${e.description}</td><td class="amt">${fmtPKR(e.amount)}</td></tr>`).join('')}
-    <tr class="tr-total"><td>Total Expenses</td><td class="amt">${fmtPKR(opex)}</td></tr>
-    <tr class="tr-total" style="font-size:15px"><td>NET PROFIT / (LOSS)</td><td class="amt" style="color:${net>=0?'#1a7340':'#8b0000'}">${fmtPKR(net)}</td></tr>
-    </tbody></table>
-    <div class="footer">${s.clinicName} · ${new Date().toLocaleString()}</div>
-    </body></html>`;
-  doPrint(html);
+  const s=db.settings||SEED.settings;const ac=s.invoiceColor||'#1565a0';
+  const rev=(db.invoices||[]).reduce((a,i)=>a+i.paid,0);
+  const cogs=(db.bills||[]).reduce((a,b)=>a+b.paid,0);
+  const opex=(db.expenses||[]).reduce((a,e)=>a+e.amount,0);
+  const gross=rev-cogs;const net=gross-opex;
+  doPrint(`<!DOCTYPE html><html><head><meta charset="UTF-8"/><style>body{font-family:Georgia,serif;padding:32px;color:#111}table{width:100%;border-collapse:collapse;margin:10px 0}th{background:#f0f5fb;padding:8px 11px;text-align:left;font-size:11px;text-transform:uppercase}td{padding:8px 11px;border-bottom:1px solid #eee;font-size:13px}.tr-total td{font-weight:700;border-top:2px solid #ccd5e0;font-size:14px;background:#f8fbff}.amt{text-align:right}.f{margin-top:40px;text-align:center;color:#888;font-size:11px;border-top:1px solid #ddd;padding-top:14px}@media print{body{padding:0}}</style></head><body><div style="display:flex;justify-content:space-between;margin-bottom:24px;padding-bottom:14px;border-bottom:2px solid ${ac}"><strong style="font-size:20px;color:${ac}">${s.clinicName}</strong><div style="text-align:right"><strong style="font-size:16px">Profit & Loss Statement</strong><br/><span style="color:#666;font-size:12px">Generated: ${new Date().toLocaleDateString()}</span></div></div><table><thead><tr><th>Item</th><th class="amt">Amount</th></tr></thead><tbody><tr><td colspan="2"><strong>REVENUE</strong></td></tr><tr><td style="padding-left:20px">Patient Collections</td><td class="amt">${fmtPKR(rev)}</td></tr><tr class="tr-total"><td>Total Revenue</td><td class="amt">${fmtPKR(rev)}</td></tr><tr><td colspan="2"><strong>COST OF GOODS SOLD</strong></td></tr><tr><td style="padding-left:20px">Supplier Bills Paid</td><td class="amt">${fmtPKR(cogs)}</td></tr><tr class="tr-total"><td>Gross Profit</td><td class="amt">${fmtPKR(gross)}</td></tr><tr><td colspan="2"><strong>OPERATING EXPENSES</strong></td></tr>${(db.expenses||[]).map(e=>`<tr><td style="padding-left:20px">${e.description}</td><td class="amt">${fmtPKR(e.amount)}</td></tr>`).join('')}<tr class="tr-total"><td>Total Expenses</td><td class="amt">${fmtPKR(opex)}</td></tr><tr class="tr-total" style="font-size:15px"><td>NET PROFIT / (LOSS)</td><td class="amt" style="color:${net>=0?'#1a7340':'#8b0000'}">${fmtPKR(net)}</td></tr></tbody></table><div class="f">${s.clinicName} · ${new Date().toLocaleString()}</div></body></html>`);
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// LINE ITEMS
-// ═══════════════════════════════════════════════════════════════════════════════
+// ─── LINE ITEMS ──────────────────────────────────────────────────────────────
 const LineItems=({items,setItems})=>{
   const upd=(i,f,v)=>{const a=[...items];const qty=f==='qty'?Number(v):Number(a[i].qty);const rate=f==='rate'?Number(v):Number(a[i].rate);a[i]={...a[i],[f]:f==='qty'||f==='rate'?Number(v):v,amount:qty*rate};setItems(a);};
   const total=items.reduce((a,x)=>a+(Number(x.qty)*Number(x.rate)||0),0);
@@ -599,9 +327,9 @@ const LineItems=({items,setItems})=>{
     {items.map((it,i)=>(
       <div key={i} style={{display:'grid',gridTemplateColumns:'3fr 1fr 1.2fr 1.2fr 26px',gap:5,marginBottom:5}}>
         <input value={it.desc||''} onChange={e=>upd(i,'desc',e.target.value)} placeholder="Description" style={{background:'#060c16',border:'1px solid #1e3650',borderRadius:7,padding:'.4rem .62rem',color:'#e0f0fc',fontSize:'.83rem',outline:'none'}}/>
-        <input type="number" value={it.qty} onChange={e=>upd(i,'qty',e.target.value)} style={{background:'#060c16',border:'1px solid #1e3650',borderRadius:7,padding:'.4rem .4rem',color:'#e0f0fc',fontSize:'.83rem',outline:'none',textAlign:'center'}}/>
-        <input type="number" value={it.rate} onChange={e=>upd(i,'rate',e.target.value)} style={{background:'#060c16',border:'1px solid #1e3650',borderRadius:7,padding:'.4rem .4rem',color:'#e0f0fc',fontSize:'.83rem',outline:'none'}}/>
-        <div style={{background:'#060c16',border:'1px solid #1e3650',borderRadius:7,padding:'.4rem .4rem',color:'#38c878',fontSize:'.83rem',display:'flex',alignItems:'center'}}>{fmtPKR(Number(it.qty)*Number(it.rate))}</div>
+        <input type="number" value={it.qty} onChange={e=>upd(i,'qty',e.target.value)} style={{background:'#060c16',border:'1px solid #1e3650',borderRadius:7,padding:'.4rem',color:'#e0f0fc',fontSize:'.83rem',outline:'none',textAlign:'center'}}/>
+        <input type="number" value={it.rate} onChange={e=>upd(i,'rate',e.target.value)} style={{background:'#060c16',border:'1px solid #1e3650',borderRadius:7,padding:'.4rem',color:'#e0f0fc',fontSize:'.83rem',outline:'none'}}/>
+        <div style={{background:'#060c16',border:'1px solid #1e3650',borderRadius:7,padding:'.4rem',color:'#38c878',fontSize:'.83rem',display:'flex',alignItems:'center'}}>{fmtPKR(Number(it.qty)*Number(it.rate))}</div>
         <button onClick={()=>setItems(items.filter((_,j)=>j!==i))} style={{background:'none',border:'none',color:'#502020',cursor:'pointer',padding:2,display:'flex',alignItems:'center'}}><Icon n="trash" s={13}/></button>
       </div>
     ))}
@@ -612,16 +340,11 @@ const LineItems=({items,setItems})=>{
   </div>);
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// PAYMENT MODAL
-// ═══════════════════════════════════════════════════════════════════════════════
-const PayModal=({doc,docType,onSave,onClose})=>{
+// ─── PAY MODAL ───────────────────────────────────────────────────────────────
+const PayModal=({doc,onSave,onClose})=>{
   const bal=doc.total-(doc.paid||0);
-  const[amt,setAmt]=useState(String(bal));
-  const[method,setMethod]=useState('Cash');
-  const[date,setDate]=useState(today());
-  const[note,setNote]=useState('');
-  const go=()=>{const a=Number(amt);if(!a||a<=0)return;const newPaid=Math.min((doc.paid||0)+a,doc.total);const status=newPaid>=doc.total?'paid':'partial';const payment={id:uid('PAY'),date,amount:a,method,note};onSave({...doc,paid:newPaid,status,payments:[...(doc.payments||[]),payment]});};
+  const[amt,setAmt]=useState(String(bal));const[method,setMethod]=useState('Cash');const[date,setDate]=useState(today());const[note,setNote]=useState('');
+  const go=()=>{const a=Number(amt);if(!a||a<=0)return;const newPaid=Math.min((doc.paid||0)+a,doc.total);const status=newPaid>=doc.total?'paid':'partial';onSave({...doc,paid:newPaid,status,payments:[...(doc.payments||[]),{id:uid('PAY'),date,amount:a,method,note}]});};
   return(<Modal title={`Record Payment — ${doc.id}`} onClose={onClose}>
     <div style={{background:'#06101a',border:'1px solid #1e3650',borderRadius:12,padding:'1rem',marginBottom:'1.1rem',display:'grid',gridTemplateColumns:'1fr 1fr',gap:'.5rem'}}>
       {[['Document',doc.id],['Total',fmtPKR(doc.total)],['Paid So Far',fmtPKR(doc.paid||0)],['Balance Due',fmtPKR(bal)]].map(([k,v])=>(
@@ -629,29 +352,23 @@ const PayModal=({doc,docType,onSave,onClose})=>{
         <div style={{color:k==='Balance Due'?'#e85050':'#e0f0fc',fontWeight:700,fontSize:'.88rem'}}>{v}</div></div>
       ))}
     </div>
-    {bal<=0
-      ?<div style={{color:'#38c878',textAlign:'center',padding:'1rem',background:'#0b3a22',borderRadius:10}}>✓ Fully paid.</div>
-      :<><FI label="Amount (PKR)" type="number" value={amt} onChange={setAmt} required/>
-        <FI label="Payment Date" type="date" value={date} onChange={setDate}/>
-        <FS label="Payment Method" value={method} onChange={setMethod} options={['Cash','Card','Bank Transfer','Cheque','JazzCash','EasyPaisa']}/>
-        <FI label="Note / Reference" value={note} onChange={setNote} placeholder="Cheque no., transfer ref, etc."/>
-        <Btn full success onClick={go} icon="pay">Record Payment of {fmtPKR(Number(amt)||0)}</Btn>
-      </>}
+    {bal<=0?<div style={{color:'#38c878',textAlign:'center',padding:'1rem',background:'#0b3a22',borderRadius:10}}>✓ Fully paid.</div>
+    :<><FI label="Amount (PKR)" type="number" value={amt} onChange={setAmt} required/>
+      <FI label="Payment Date" type="date" value={date} onChange={setDate}/>
+      <FS label="Payment Method" value={method} onChange={setMethod} options={['Cash','Card','Bank Transfer','Cheque','JazzCash','EasyPaisa']}/>
+      <FI label="Note / Reference" value={note} onChange={setNote} placeholder="Cheque no., transfer ref, etc."/>
+      <Btn full success onClick={go} icon="pay">Record Payment of {fmtPKR(Number(amt)||0)}</Btn>
+    </>}
   </Modal>);
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// DOCUMENT VIEW MODAL (Invoice / Bill)
-// ═══════════════════════════════════════════════════════════════════════════════
+// ─── DOC VIEW MODAL ──────────────────────────────────────────────────────────
 const DocViewModal=({doc,docType,db,onClose,onPay,onEdit,onDelete,canPay,canEdit})=>{
-  const pt=db.patients?.find(p=>p.id===doc.patientId);
-  const sp=db.suppliers?.find(s=>s.id===doc.supplierId);
-  const dr=db.doctors?.find(d=>d.id===doc.doctorId);
-  const entity=pt||sp;
-  const bal=doc.total-(doc.paid||0);
+  const pt=db.patients?.find(p=>p.id===doc.patientId);const sp=db.suppliers?.find(s=>s.id===doc.supplierId);
+  const entity=pt||sp;const bal=doc.total-(doc.paid||0);
   return(<Modal title={`${docType==='invoice'?'Invoice':'Bill'} ${doc.id}`} onClose={onClose} wide>
     <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'.45rem',marginBottom:'1rem'}}>
-      {[[docType==='invoice'?'Patient':'Supplier',entity?.name||'—'],[docType==='invoice'?'Doctor':'',''],['Date',doc.date],['Due Date',doc.dueDate||'—'],['Status','badge'],['','']].filter(([k])=>k).map(([k,v])=>(
+      {[[docType==='invoice'?'Patient':'Supplier',entity?.name||'—'],['Date',doc.date],['Due Date',doc.dueDate||'—'],['Status','badge']].map(([k,v])=>(
         <div key={k} style={{background:'#060c16',borderRadius:8,padding:'.52rem .72rem'}}>
           <div style={{color:'#2e4a60',fontSize:'.66rem',textTransform:'uppercase',marginBottom:2}}>{k}</div>
           {v==='badge'?<Badge status={doc.status}/>:<div style={{color:'#e0f0fc',fontWeight:600,fontSize:'.84rem'}}>{v}</div>}
@@ -664,7 +381,7 @@ const DocViewModal=({doc,docType,db,onClose,onPay,onEdit,onDelete,canPay,canEdit
     </table>
     <div style={{display:'flex',justifyContent:'flex-end',marginBottom:'1rem'}}>
       <div style={{minWidth:215}}>
-        {[['Subtotal',doc.subtotal],[db.settings?.taxLabel||'Tax',doc.tax],['Discount',-(doc.discount||0)],['TOTAL',doc.total],['Paid',doc.paid||0],['Balance Due',bal]].filter(([,v])=>v!=null&&v!==0).map(([k,v])=>(
+        {[['Subtotal',doc.subtotal],['TOTAL',doc.total],['Paid',doc.paid||0],['Balance Due',bal]].filter(([,v])=>v!=null&&v!==0).map(([k,v])=>(
           <div key={k} style={{display:'flex',justifyContent:'space-between',padding:'.26rem 0',borderTop:['TOTAL','Balance Due'].includes(k)?'1px solid #1e3650':'none'}}>
             <span style={{color:'#4a7090',fontSize:'.79rem'}}>{k}</span>
             <span style={{color:k==='Balance Due'&&v>0?'#e8a030':k==='Paid'?'#38c878':'#e0f0fc',fontWeight:['TOTAL','Balance Due'].includes(k)?700:400,fontSize:'.82rem'}}>{fmtPKR(Math.abs(v))}</span>
@@ -672,39 +389,47 @@ const DocViewModal=({doc,docType,db,onClose,onPay,onEdit,onDelete,canPay,canEdit
         ))}
       </div>
     </div>
-    {doc.payments?.length>0&&<>
-      <div style={{color:'#2e4a60',fontSize:'.66rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:7}}>Payment History</div>
+    {(doc.payments||[]).length>0&&<><div style={{color:'#2e4a60',fontSize:'.66rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:7}}>Payment History</div>
       <table style={{width:'100%',borderCollapse:'collapse',marginBottom:'1rem'}}>
         <thead><tr>{['Date','Method','Note','Amount'].map(h=><th key={h} style={{color:'#2e4a60',fontSize:'.66rem',textTransform:'uppercase',padding:'.34rem .44rem',textAlign:'left',borderBottom:'1px solid #1e3650'}}>{h}</th>)}</tr></thead>
         <tbody>{doc.payments.map(p=><tr key={p.id}><td style={{color:'#4a7090',padding:'.34rem .44rem',fontSize:'.8rem'}}>{p.date}</td><td style={{color:'#e0f0fc',padding:'.34rem .44rem',fontSize:'.8rem'}}>{p.method}</td><td style={{color:'#4a7090',padding:'.34rem .44rem',fontSize:'.8rem'}}>{p.note||'—'}</td><td style={{color:'#38c878',padding:'.34rem .44rem',fontSize:'.8rem',fontWeight:700}}>{fmtPKR(p.amount)}</td></tr>)}</tbody>
       </table>
     </>}
-    {doc.notes&&<div style={{color:'#4a7090',fontSize:'.82rem',marginBottom:'1rem'}}>Notes: {doc.notes}</div>}
     <div style={{display:'flex',gap:'.5rem',flexWrap:'wrap'}}>
-      <Btn full={false} icon="print" onClick={()=>printDoc(docType,doc,db)}>Print / PDF</Btn>
+      <Btn icon="print" onClick={()=>printDoc(docType,doc,db)}>Print / PDF</Btn>
       {canPay&&doc.status!=='paid'&&<Btn icon="pay" success onClick={()=>{onClose();onPay(doc);}}>Record Payment</Btn>}
       {canEdit&&<><Btn ghost icon="edit" onClick={()=>{onClose();onEdit(doc);}}/><Btn ghost icon="trash" danger onClick={()=>{if(window.confirm('Delete?')){onDelete(doc.id);onClose();}}}/></>}
     </div>
   </Modal>);
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// LOGIN SCREEN
-// ═══════════════════════════════════════════════════════════════════════════════
+// ─── LOADING SCREEN ──────────────────────────────────────────────────────────
+const LoadingScreen=({status})=>(
+  <div style={{minHeight:'100vh',background:'#040b13',display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:'1.5rem'}}>
+    <div style={{width:66,height:66,background:'linear-gradient(135deg,#14508a,#0c3060)',borderRadius:20,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 8px 32px rgba(20,80,138,.4)'}}><Icon n="tooth" s={32}/></div>
+    <div style={{textAlign:'center'}}>
+      <div style={{color:'#e0f0fc',fontFamily:"'Cormorant Garamond',serif",fontSize:'1.6rem',marginBottom:8}}>Ayesha Dental Clinic</div>
+      <div style={{color:'#4a7090',fontSize:'.84rem',marginBottom:16}}>{status}</div>
+      <div style={{display:'flex',gap:6,justifyContent:'center'}}>
+        {[0,1,2].map(i=><div key={i} style={{width:8,height:8,background:'#14508a',borderRadius:'50%',animation:`pulse 1.2s ease-in-out ${i*0.2}s infinite`}}/>)}
+      </div>
+    </div>
+    <style>{`@keyframes pulse{0%,100%{opacity:.2;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}`}</style>
+  </div>
+);
+
+// ─── LOGIN SCREEN ────────────────────────────────────────────────────────────
 const LoginScreen=({db,onLogin,fbStatus})=>{
   const[em,setEm]=useState('');const[pw,setPw]=useState('');const[err,setErr]=useState('');
-  const go=()=>{const u=db.users?.find(x=>x.email===em&&x.password===pw&&x.active);if(u)onLogin(u);else setErr('Invalid credentials or account inactive.');};
+  const go=()=>{const u=(db.users||[]).find(x=>x.email===em&&x.password===pw&&x.active);if(u)onLogin(u);else setErr('Invalid credentials or account inactive.');};
   return(<div style={{minHeight:'100vh',background:'#040b13',display:'flex',alignItems:'center',justifyContent:'center',padding:'1rem'}}>
     <div style={{width:'100%',maxWidth:400}}>
       <div style={{textAlign:'center',marginBottom:'2rem'}}>
-        <div style={{width:66,height:66,background:'linear-gradient(135deg,#14508a,#0c3060)',borderRadius:20,display:'inline-flex',alignItems:'center',justifyContent:'center',marginBottom:14,boxShadow:'0 8px 32px rgba(20,80,138,.4)'}}>
-          <Icon n="tooth" s={32}/>
-        </div>
+        <div style={{width:66,height:66,background:'linear-gradient(135deg,#14508a,#0c3060)',borderRadius:20,display:'inline-flex',alignItems:'center',justifyContent:'center',marginBottom:14,boxShadow:'0 8px 32px rgba(20,80,138,.4)'}}><Icon n="tooth" s={32}/></div>
         <h1 style={{fontFamily:"'Cormorant Garamond',serif",color:'#e0f0fc',fontSize:'1.9rem',margin:'0 0 4px'}}>{db.settings?.clinicName||'Dental Clinic'}</h1>
         <p style={{color:'#4a7090',margin:0,fontSize:'.85rem'}}>Practice Management System</p>
-        <div style={{marginTop:10,display:'inline-flex',alignItems:'center',gap:6,fontSize:'.75rem',color:fbStatus==='online'?'#38c878':fbStatus==='connecting'?'#e8a030':'#4a7090',background:'#090f1a',border:'1px solid #1e3650',borderRadius:20,padding:'3px 10px'}}>
-          <Icon n={fbStatus==='online'?'wifi':fbStatus==='connecting'?'sync':'wifioff'} s={12}/>
-          {fbStatus==='online'?'☁ Cloud Sync Active':fbStatus==='connecting'?'Connecting to Firebase…':'Offline — Firebase not reachable'}
+        <div style={{marginTop:10,display:'inline-flex',alignItems:'center',gap:6,fontSize:'.75rem',color:'#38c878',background:'#090f1a',border:'1px solid #1e3650',borderRadius:20,padding:'3px 10px'}}>
+          <Icon n="wifi" s={12}/>☁ Firebase Connected
         </div>
       </div>
       <Card>
@@ -717,19 +442,19 @@ const LoginScreen=({db,onLogin,fbStatus})=>{
   </div>);
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// DASHBOARD
-// ═══════════════════════════════════════════════════════════════════════════════
+// ─── DASHBOARD ───────────────────────────────────────────────────────────────
 const Dashboard=({db})=>{
-  const rev=db.invoices.reduce((a,i)=>a+i.paid,0);
-  const outstanding=db.invoices.filter(i=>i.status!=='paid').reduce((a,i)=>a+(i.total-i.paid),0);
-  const todayAppts=db.appointments.filter(a=>a.date===today());
-  const barD=[1,2,3,4].map(i=>{const m=`2026-0${i}`;return{m:months[i-1],rev:db.invoices.filter(x=>x.date.startsWith(m)).reduce((a,x)=>a+x.paid,0),exp:db.bills.filter(x=>x.date.startsWith(m)).reduce((a,x)=>a+x.paid,0)+db.expenses.filter(x=>x.date.startsWith(m)).reduce((a,x)=>a+x.amount,0)};});
+  const invoices=db.invoices||[];const bills=db.bills||[];const expenses=db.expenses||[];
+  const appointments=db.appointments||[];const patients=db.patients||[];
+  const rev=invoices.reduce((a,i)=>a+i.paid,0);
+  const outstanding=invoices.filter(i=>i.status!=='paid').reduce((a,i)=>a+(i.total-i.paid),0);
+  const todayAppts=appointments.filter(a=>a.date===today());
+  const barD=[1,2,3,4].map(i=>{const m=`2026-0${i}`;return{m:months[i-1],rev:invoices.filter(x=>x.date.startsWith(m)).reduce((a,x)=>a+x.paid,0),exp:bills.filter(x=>x.date.startsWith(m)).reduce((a,x)=>a+x.paid,0)+expenses.filter(x=>x.date.startsWith(m)).reduce((a,x)=>a+x.amount,0)};});
   const mx=Math.max(...barD.flatMap(d=>[d.rev,d.exp]),1);
   return(<div>
     <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:'1.55rem',color:'#e0f0fc',margin:'0 0 1.2rem'}}>Dashboard</h2>
     <div className="grid-4" style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:'.65rem',marginBottom:'1.2rem'}}>
-      <StatCard label="Total Patients" value={db.patients.length} color="#4a90d9" icon="patients"/>
+      <StatCard label="Total Patients" value={patients.length} color="#4a90d9" icon="patients"/>
       <StatCard label="Revenue Collected" value={fmtPKR(rev)} color="#38c878" icon="expense"/>
       <StatCard label="Outstanding" value={fmtPKR(outstanding)} color="#e8a030" icon="invoice"/>
       <StatCard label="Today's Appts" value={todayAppts.length} color="#c084fc" icon="calendar"/>
@@ -756,45 +481,45 @@ const Dashboard=({db})=>{
       <Card>
         <div style={{color:'#4a7090',fontSize:'.67rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:'1rem'}}>Today — {todayAppts.length} Appointments</div>
         {todayAppts.length===0?<div style={{color:'#2e4a60',textAlign:'center',padding:'1.8rem 0',fontSize:'.84rem'}}>No appointments today</div>:
-        todayAppts.map(a=>{const pt=db.patients.find(p=>p.id===a.patientId);const dr=db.doctors.find(d=>d.id===a.doctorId);return(
+        todayAppts.map(a=>{const pt=patients.find(p=>p.id===a.patientId);return(
           <div key={a.id} style={{display:'flex',justifyContent:'space-between',padding:'.42rem 0',borderBottom:'1px solid #0d1e2c'}}>
             <div><div style={{color:'#e0f0fc',fontSize:'.83rem',fontWeight:600}}>{pt?.name||'—'}</div><div style={{color:'#4a7090',fontSize:'.7rem'}}>{a.time} · {a.treatment?.substring(0,20)}</div></div>
-            <div style={{textAlign:'right'}}><Badge status={a.status}/></div>
+            <Badge status={a.status}/>
           </div>);})}
       </Card>
     </div>
     <Card>
       <div style={{color:'#4a7090',fontSize:'.67rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:'1rem'}}>Recent Invoices</div>
+      {invoices.length===0?<div style={{color:'#2e4a60',textAlign:'center',padding:'2rem',fontSize:'.84rem'}}>No invoices yet.</div>:
       <table style={{width:'100%',borderCollapse:'collapse'}}>
         <thead><tr>{['Invoice','Patient','Date','Total','Paid','Status'].map(h=><th key={h} style={{color:'#2e4a60',fontSize:'.66rem',textTransform:'uppercase',padding:'.36rem .44rem',textAlign:'left',borderBottom:'1px solid #1e3650'}}>{h}</th>)}</tr></thead>
-        <tbody>{[...db.invoices].reverse().slice(0,5).map(inv=>{const pt=db.patients.find(p=>p.id===inv.patientId);return(
+        <tbody>{[...invoices].reverse().slice(0,5).map(inv=>{const pt=patients.find(p=>p.id===inv.patientId);return(
           <tr key={inv.id}><td style={{color:'#4a90d9',padding:'.38rem .44rem',fontSize:'.8rem'}}>{inv.id}</td><td style={{color:'#e0f0fc',padding:'.38rem .44rem',fontSize:'.8rem'}}>{pt?.name||'—'}</td><td style={{color:'#4a7090',padding:'.38rem .44rem',fontSize:'.78rem'}}>{inv.date}</td><td style={{color:'#e0f0fc',padding:'.38rem .44rem',fontSize:'.8rem'}}>{fmtPKR(inv.total)}</td><td style={{color:'#38c878',padding:'.38rem .44rem',fontSize:'.8rem'}}>{fmtPKR(inv.paid)}</td><td style={{padding:'.38rem .44rem'}}><Badge status={inv.status}/></td></tr>);})}</tbody>
-      </table>
+      </table>}
     </Card>
   </div>);
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// PATIENTS
-// ═══════════════════════════════════════════════════════════════════════════════
+// ─── PATIENTS ────────────────────────────────────────────────────────────────
 const Patients=({db,setDb,can})=>{
   const[search,setSearch]=useState('');const[modal,setModal]=useState(null);const[view,setView]=useState(null);
   const blank={name:'',age:'',phone:'',email:'',gender:'Male',address:'',bloodGroup:'',photo:null,notes:'',createdAt:today()};
   const[form,setForm]=useState(blank);const[editId,setEditId]=useState(null);
   const photoRef=useRef();
-  const f=db.patients.filter(p=>p.name.toLowerCase().includes(search.toLowerCase())||p.phone.includes(search));
-  const save=()=>{if(!form.name||!form.phone)return;const d={...form,age:Number(form.age)};if(editId)setDb(x=>({...x,patients:x.patients.map(p=>p.id===editId?{...d,id:editId}:p)}));else setDb(x=>({...x,patients:[...x.patients,{...d,id:Date.now()}]}));setModal(null);setForm(blank);setEditId(null);};
-  const del=id=>{if(window.confirm('Delete patient?'))setDb(x=>({...x,patients:x.patients.filter(p=>p.id!==id)}));};
-  const handlePhoto=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>setForm(x=>({...x,photo:ev.target.result}));r.readAsDataURL(f);};
-  const vp=view&&db.patients.find(p=>p.id===view);
+  const patients=db.patients||[];
+  const f=patients.filter(p=>p.name.toLowerCase().includes(search.toLowerCase())||p.phone.includes(search));
+  const save=()=>{if(!form.name||!form.phone)return;const d={...form,age:Number(form.age)};if(editId)setDb(x=>({...x,patients:(x.patients||[]).map(p=>p.id===editId?{...d,id:editId}:p)}));else setDb(x=>({...x,patients:[...(x.patients||[]),{...d,id:Date.now()}]}));setModal(null);setForm(blank);setEditId(null);};
+  const del=id=>{if(window.confirm('Delete patient?'))setDb(x=>({...x,patients:(x.patients||[]).filter(p=>p.id!==id)}));};
+  const handlePhoto=e=>{const fi=e.target.files[0];if(!fi)return;const r=new FileReader();r.onload=ev=>setForm(x=>({...x,photo:ev.target.result}));r.readAsDataURL(fi);};
+  const vp=view&&patients.find(p=>p.id===view);
   return(<div>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.1rem'}}>
-      <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:'1.55rem',color:'#e0f0fc',margin:0}}>Patients <span style={{color:'#2e4a60',fontSize:'.95rem'}}>({db.patients.length})</span></h2>
+      <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:'1.55rem',color:'#e0f0fc',margin:0}}>Patients <span style={{color:'#2e4a60',fontSize:'.95rem'}}>({patients.length})</span></h2>
       {can('edit_patients')&&<Btn icon="plus" onClick={()=>{setForm(blank);setEditId(null);setModal('form')}}>Add Patient</Btn>}
     </div>
     <div style={{position:'relative',marginBottom:'1rem'}}>
       <span style={{position:'absolute',left:11,top:'50%',transform:'translateY(-50%)',color:'#2e4a60'}}><Icon n="search" s={14}/></span>
-      <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search by name or phone…" style={{width:'100%',background:'#060c16',border:'1px solid #1e3650',borderRadius:10,padding:'.52rem .85rem .52rem 2.2rem',color:'#e0f0fc',fontSize:'.85rem',outline:'none',boxSizing:'border-box'}}/>
+      <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search by name or phone…" style={{width:'100%',background:'#060c16',border:'1px solid #1e3650',borderRadius:10,padding:'.52rem .85rem .52rem 2.2rem',color:'#e0f0fc',outline:'none',boxSizing:'border-box'}}/>
     </div>
     <div style={{display:'grid',gap:'.52rem'}}>
       {f.map(p=>(
@@ -843,27 +568,26 @@ const Patients=({db,setDb,can})=>{
       </div>
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'1rem'}}>
         <div><div style={{color:'#4a7090',fontSize:'.66rem',textTransform:'uppercase',marginBottom:7}}>Visit History</div>
-          {db.history.filter(h=>h.patientId===vp.id).length===0?<div style={{color:'#2e4a60',fontSize:'.82rem'}}>No visits recorded</div>:
-          db.history.filter(h=>h.patientId===vp.id).map(h=><div key={h.id} style={{background:'#060c16',border:'1px solid #1e3650',borderRadius:8,padding:'.52rem .72rem',marginBottom:5}}><div style={{color:'#e0f0fc',fontSize:'.82rem',fontWeight:600}}>{h.treatment}</div><div style={{color:'#4a7090',fontSize:'.7rem'}}>{h.date} · {fmtPKR(h.fee)}</div></div>)}</div>
+          {(db.history||[]).filter(h=>h.patientId===vp.id).length===0?<div style={{color:'#2e4a60',fontSize:'.82rem'}}>No visits recorded</div>:
+          (db.history||[]).filter(h=>h.patientId===vp.id).map(h=><div key={h.id} style={{background:'#060c16',border:'1px solid #1e3650',borderRadius:8,padding:'.52rem .72rem',marginBottom:5}}><div style={{color:'#e0f0fc',fontSize:'.82rem',fontWeight:600}}>{h.treatment}</div><div style={{color:'#4a7090',fontSize:'.7rem'}}>{h.date} · {fmtPKR(h.fee)}</div></div>)}</div>
         <div><div style={{color:'#4a7090',fontSize:'.66rem',textTransform:'uppercase',marginBottom:7}}>Upcoming Appointments</div>
-          {db.appointments.filter(a=>a.patientId===vp.id&&a.status==='scheduled').length===0?<div style={{color:'#2e4a60',fontSize:'.82rem'}}>No upcoming appointments</div>:
-          db.appointments.filter(a=>a.patientId===vp.id&&a.status==='scheduled').map(a=><div key={a.id} style={{background:'#060c16',border:'1px solid #1e3650',borderRadius:8,padding:'.52rem .72rem',marginBottom:5}}><div style={{color:'#e0f0fc',fontSize:'.82rem',fontWeight:600}}>{a.treatment}</div><div style={{color:'#4a7090',fontSize:'.7rem'}}>{a.date} {a.time}</div></div>)}</div>
+          {(db.appointments||[]).filter(a=>a.patientId===vp.id&&a.status==='scheduled').length===0?<div style={{color:'#2e4a60',fontSize:'.82rem'}}>No upcoming appointments</div>:
+          (db.appointments||[]).filter(a=>a.patientId===vp.id&&a.status==='scheduled').map(a=><div key={a.id} style={{background:'#060c16',border:'1px solid #1e3650',borderRadius:8,padding:'.52rem .72rem',marginBottom:5}}><div style={{color:'#e0f0fc',fontSize:'.82rem',fontWeight:600}}>{a.treatment}</div><div style={{color:'#4a7090',fontSize:'.7rem'}}>{a.date} {a.time}</div></div>)}</div>
       </div>
     </Modal>}
   </div>);
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// APPOINTMENTS
-// ═══════════════════════════════════════════════════════════════════════════════
+// ─── APPOINTMENTS ────────────────────────────────────────────────────────────
 const Appointments=({db,setDb,can})=>{
   const[modal,setModal]=useState(false);const[editId,setEditId]=useState(null);
   const[fd,setFd]=useState(today());const[fdr,setFdr]=useState('');
   const blank={patientId:'',doctorId:'',date:today(),time:'09:00',duration:30,treatment:'',status:'scheduled',notes:''};
   const[form,setForm]=useState(blank);
-  const filtered=[...db.appointments].filter(a=>(fd?a.date===fd:true)&&(fdr?a.doctorId===Number(fdr):true)).sort((a,b)=>a.time.localeCompare(b.time));
-  const save=()=>{if(!form.patientId||!form.treatment)return;const d={...form,patientId:Number(form.patientId),doctorId:Number(form.doctorId),duration:Number(form.duration)};if(editId)setDb(x=>({...x,appointments:x.appointments.map(a=>a.id===editId?{...d,id:editId}:a)}));else setDb(x=>({...x,appointments:[...x.appointments,{...d,id:Date.now()}]}));setModal(false);setForm(blank);setEditId(null);};
-  const del=id=>{if(window.confirm('Delete?'))setDb(x=>({...x,appointments:x.appointments.filter(a=>a.id!==id)}));};
+  const appointments=db.appointments||[];
+  const filtered=[...appointments].filter(a=>(fd?a.date===fd:true)&&(fdr?a.doctorId===Number(fdr):true)).sort((a,b)=>a.time.localeCompare(b.time));
+  const save=()=>{if(!form.patientId||!form.treatment)return;const d={...form,patientId:Number(form.patientId),doctorId:Number(form.doctorId),duration:Number(form.duration)};if(editId)setDb(x=>({...x,appointments:(x.appointments||[]).map(a=>a.id===editId?{...d,id:editId}:a)}));else setDb(x=>({...x,appointments:[...(x.appointments||[]),{...d,id:Date.now()}]}));setModal(false);setForm(blank);setEditId(null);};
+  const del=id=>{if(window.confirm('Delete?'))setDb(x=>({...x,appointments:(x.appointments||[]).filter(a=>a.id!==id)}));};
   const slots=['08:00','08:30','09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00'];
   return(<div>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.1rem'}}>
@@ -872,10 +596,10 @@ const Appointments=({db,setDb,can})=>{
     </div>
     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'.65rem',marginBottom:'1rem'}}>
       <FI type="date" value={fd} onChange={setFd}/>
-      <FS value={fdr} onChange={setFdr} options={[{value:'',label:'All Doctors'},...db.doctors.map(d=>({value:String(d.id),label:d.name}))]}/>
+      <FS value={fdr} onChange={setFdr} options={[{value:'',label:'All Doctors'},...(db.doctors||[]).map(d=>({value:String(d.id),label:d.name}))]}/>
     </div>
     <div style={{display:'grid',gap:'.52rem'}}>
-      {filtered.map(a=>{const pt=db.patients.find(p=>p.id===a.patientId);const dr=db.doctors.find(d=>d.id===a.doctorId);return(
+      {filtered.map(a=>{const pt=(db.patients||[]).find(p=>p.id===a.patientId);const dr=(db.doctors||[]).find(d=>d.id===a.doctorId);return(
         <Card key={a.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
           <div style={{display:'flex',gap:'.85rem',alignItems:'center'}}>
             <div style={{textAlign:'center',minWidth:48,background:'#060c16',borderRadius:9,padding:'.32rem'}}>
@@ -887,7 +611,7 @@ const Appointments=({db,setDb,can})=>{
           <div style={{display:'flex',gap:'.38rem',alignItems:'center'}}>
             <Badge status={a.status}/>
             {can('edit_appointments')&&<>
-              {a.status==='scheduled'&&<Btn sm ghost onClick={()=>setDb(x=>({...x,appointments:x.appointments.map(ap=>ap.id===a.id?{...ap,status:'completed'}:ap)}))}><Icon n="check" s={12}/></Btn>}
+              {a.status==='scheduled'&&<Btn sm ghost onClick={()=>setDb(x=>({...x,appointments:(x.appointments||[]).map(ap=>ap.id===a.id?{...ap,status:'completed'}:ap)}))}><Icon n="check" s={12}/></Btn>}
               <Btn sm ghost icon="edit" onClick={()=>{setForm({...a,patientId:String(a.patientId),doctorId:String(a.doctorId)});setEditId(a.id);setModal(true);}}/>
               <Btn sm ghost icon="trash" danger onClick={()=>del(a.id)}/>
             </>}
@@ -896,8 +620,8 @@ const Appointments=({db,setDb,can})=>{
       {filtered.length===0&&<div style={{color:'#2e4a60',textAlign:'center',padding:'3rem'}}>No appointments for this filter.</div>}
     </div>
     {modal&&<Modal title={editId?'Edit Appointment':'New Appointment'} onClose={()=>{setModal(false);setEditId(null);setForm(blank)}}>
-      <FS label="Patient" value={form.patientId} onChange={v=>setForm(f=>({...f,patientId:v}))} options={[{value:'',label:'Select Patient…'},...db.patients.map(p=>({value:String(p.id),label:p.name}))]}/>
-      <G2><FS label="Doctor" value={form.doctorId} onChange={v=>setForm(f=>({...f,doctorId:v}))} options={[{value:'',label:'Select Doctor…'},...db.doctors.map(d=>({value:String(d.id),label:d.name}))]}/>
+      <FS label="Patient" value={form.patientId} onChange={v=>setForm(f=>({...f,patientId:v}))} options={[{value:'',label:'Select Patient…'},...(db.patients||[]).map(p=>({value:String(p.id),label:p.name}))]}/>
+      <G2><FS label="Doctor" value={form.doctorId} onChange={v=>setForm(f=>({...f,doctorId:v}))} options={[{value:'',label:'Select Doctor…'},...(db.doctors||[]).map(d=>({value:String(d.id),label:d.name}))]}/>
         <FI label="Date" type="date" value={form.date} onChange={v=>setForm(f=>({...f,date:v}))}/>
         <FS label="Time" value={form.time} onChange={v=>setForm(f=>({...f,time:v}))} options={slots}/>
         <FI label="Duration (min)" type="number" value={form.duration} onChange={v=>setForm(f=>({...f,duration:v}))}/>
@@ -910,24 +634,23 @@ const Appointments=({db,setDb,can})=>{
   </div>);
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// HISTORY
-// ═══════════════════════════════════════════════════════════════════════════════
+// ─── HISTORY ─────────────────────────────────────────────────────────────────
 const History=({db,setDb,can})=>{
   const[modal,setModal]=useState(false);const[editId,setEditId]=useState(null);const[fp,setFp]=useState('');
   const blank={patientId:'',doctorId:'',date:today(),treatment:'',notes:'',fee:''};
   const[form,setForm]=useState(blank);
-  const filtered=fp?db.history.filter(h=>h.patientId===Number(fp)):db.history;
-  const save=()=>{if(!form.patientId||!form.treatment)return;const d={...form,patientId:Number(form.patientId),doctorId:Number(form.doctorId),fee:Number(form.fee)};if(editId)setDb(x=>({...x,history:x.history.map(h=>h.id===editId?{...d,id:editId}:h)}));else setDb(x=>({...x,history:[...x.history,{...d,id:Date.now()}]}));setModal(false);setForm(blank);setEditId(null);};
-  const del=id=>{if(window.confirm('Delete?'))setDb(x=>({...x,history:x.history.filter(h=>h.id!==id)}));};
+  const history=db.history||[];
+  const filtered=fp?history.filter(h=>h.patientId===Number(fp)):history;
+  const save=()=>{if(!form.patientId||!form.treatment)return;const d={...form,patientId:Number(form.patientId),doctorId:Number(form.doctorId),fee:Number(form.fee)};if(editId)setDb(x=>({...x,history:(x.history||[]).map(h=>h.id===editId?{...d,id:editId}:h)}));else setDb(x=>({...x,history:[...(x.history||[]),{...d,id:Date.now()}]}));setModal(false);setForm(blank);setEditId(null);};
+  const del=id=>{if(window.confirm('Delete?'))setDb(x=>({...x,history:(x.history||[]).filter(h=>h.id!==id)}));};
   return(<div>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.1rem'}}>
       <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:'1.55rem',color:'#e0f0fc',margin:0}}>Patient History</h2>
       {can('edit_history')&&<Btn icon="plus" onClick={()=>{setForm(blank);setEditId(null);setModal(true)}}>Add Record</Btn>}
     </div>
-    <FS value={fp} onChange={setFp} options={[{value:'',label:'All Patients'},...db.patients.map(p=>({value:String(p.id),label:p.name}))]}/>
+    <FS value={fp} onChange={setFp} options={[{value:'',label:'All Patients'},...(db.patients||[]).map(p=>({value:String(p.id),label:p.name}))]}/>
     <div style={{display:'grid',gap:'.52rem'}}>
-      {[...filtered].reverse().map(h=>{const pt=db.patients.find(p=>p.id===h.patientId);const dr=db.doctors.find(d=>d.id===h.doctorId);return(
+      {[...filtered].reverse().map(h=>{const pt=(db.patients||[]).find(p=>p.id===h.patientId);const dr=(db.doctors||[]).find(d=>d.id===h.doctorId);return(
         <Card key={h.id} style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
           <div><div style={{display:'flex',gap:'.62rem',alignItems:'center',marginBottom:3}}>
             <span style={{color:'#4a90d9',fontWeight:700,fontSize:'.86rem'}}>{pt?.name||'—'}</span>
@@ -943,8 +666,8 @@ const History=({db,setDb,can})=>{
         </Card>);})}
     </div>
     {modal&&<Modal title={editId?'Edit Record':'Add Record'} onClose={()=>{setModal(false);setEditId(null);setForm(blank)}}>
-      <FS label="Patient" value={form.patientId} onChange={v=>setForm(f=>({...f,patientId:v}))} options={[{value:'',label:'Select Patient…'},...db.patients.map(p=>({value:String(p.id),label:p.name}))]}/>
-      <FS label="Doctor" value={form.doctorId} onChange={v=>setForm(f=>({...f,doctorId:v}))} options={[{value:'',label:'Select Doctor…'},...db.doctors.map(d=>({value:String(d.id),label:d.name}))]}/>
+      <FS label="Patient" value={form.patientId} onChange={v=>setForm(f=>({...f,patientId:v}))} options={[{value:'',label:'Select Patient…'},...(db.patients||[]).map(p=>({value:String(p.id),label:p.name}))]}/>
+      <FS label="Doctor" value={form.doctorId} onChange={v=>setForm(f=>({...f,doctorId:v}))} options={[{value:'',label:'Select Doctor…'},...(db.doctors||[]).map(d=>({value:String(d.id),label:d.name}))]}/>
       <FI label="Date" type="date" value={form.date} onChange={v=>setForm(f=>({...f,date:v}))}/>
       <FI label="Treatment" value={form.treatment} onChange={v=>setForm(f=>({...f,treatment:v}))} required/>
       <FI label="Fee (PKR)" type="number" value={form.fee} onChange={v=>setForm(f=>({...f,fee:v}))}/>
@@ -954,54 +677,52 @@ const History=({db,setDb,can})=>{
   </div>);
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// PRESCRIPTIONS
-// ═══════════════════════════════════════════════════════════════════════════════
+// ─── PRESCRIPTIONS ───────────────────────────────────────────────────────────
 const Prescriptions=({db,setDb,can})=>{
   const[modal,setModal]=useState(false);const[viewRx,setViewRx]=useState(null);const[editId,setEditId]=useState(null);const[fp,setFp]=useState('');
   const blank={patientId:'',doctorId:'',date:today(),notes:'',nextVisit:'',meds:[{name:'',dose:'',frequency:'',duration:''}]};
   const[form,setForm]=useState(blank);
-  const filtered=fp?db.prescriptions.filter(r=>r.patientId===Number(fp)):db.prescriptions;
+  const prescriptions=db.prescriptions||[];
+  const filtered=fp?prescriptions.filter(r=>r.patientId===Number(fp)):prescriptions;
   const updMed=(i,f,v)=>{const m=[...form.meds];m[i]={...m[i],[f]:v};setForm(x=>({...x,meds:m}));};
-  const save=()=>{if(!form.patientId||!form.meds[0].name)return;const d={...form,patientId:Number(form.patientId),doctorId:Number(form.doctorId),medications:form.meds};if(editId)setDb(x=>({...x,prescriptions:x.prescriptions.map(r=>r.id===editId?{...d,id:editId}:r)}));else setDb(x=>({...x,prescriptions:[...x.prescriptions,{...d,id:Date.now()}]}));setModal(false);setForm(blank);setEditId(null);};
-  const del=id=>{if(window.confirm('Delete?'))setDb(x=>({...x,prescriptions:x.prescriptions.filter(r=>r.id!==id)}));};
+  const save=()=>{if(!form.patientId||!form.meds[0].name)return;const d={...form,patientId:Number(form.patientId),doctorId:Number(form.doctorId),medications:form.meds};if(editId)setDb(x=>({...x,prescriptions:(x.prescriptions||[]).map(r=>r.id===editId?{...d,id:editId}:r)}));else setDb(x=>({...x,prescriptions:[...(x.prescriptions||[]),{...d,id:Date.now()}]}));setModal(false);setForm(blank);setEditId(null);};
+  const del=id=>{if(window.confirm('Delete?'))setDb(x=>({...x,prescriptions:(x.prescriptions||[]).filter(r=>r.id!==id)}));};
   return(<div>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.1rem'}}>
       <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:'1.55rem',color:'#e0f0fc',margin:0}}>Prescriptions</h2>
       {can('edit_prescriptions')&&<Btn icon="plus" onClick={()=>{setForm(blank);setEditId(null);setModal(true)}}>New Rx</Btn>}
     </div>
-    <FS value={fp} onChange={setFp} options={[{value:'',label:'All Patients'},...db.patients.map(p=>({value:String(p.id),label:p.name}))]}/>
+    <FS value={fp} onChange={setFp} options={[{value:'',label:'All Patients'},...(db.patients||[]).map(p=>({value:String(p.id),label:p.name}))]}/>
     <div style={{display:'grid',gap:'.52rem'}}>
-      {[...filtered].reverse().map(rx=>{const pt=db.patients.find(p=>p.id===rx.patientId);return(
+      {[...filtered].reverse().map(rx=>{const pt=(db.patients||[]).find(p=>p.id===rx.patientId);return(
         <Card key={rx.id} onClick={()=>setViewRx(rx)}>
           <div style={{display:'flex',justifyContent:'space-between',marginBottom:5}}>
             <div><span style={{color:'#4a90d9',fontWeight:700}}>{pt?.name||'—'}</span><span style={{color:'#2e4a60',fontSize:'.74rem',marginLeft:'.6rem'}}>{rx.date}</span></div>
-            <div style={{display:'flex',gap:'.35rem'}} onClick={e=>{e.stopPropagation();}}>
+            <div style={{display:'flex',gap:'.35rem'}} onClick={e=>e.stopPropagation()}>
               <Btn sm ghost icon="print" onClick={()=>printPrescription(rx,db)}>Print</Btn>
               {can('edit_prescriptions')&&<><Btn sm ghost icon="edit" onClick={()=>{setForm({...rx,patientId:String(rx.patientId),doctorId:String(rx.doctorId),meds:rx.medications});setEditId(rx.id);setModal(true);}}/><Btn sm ghost icon="trash" danger onClick={()=>del(rx.id)}/></>}
             </div>
           </div>
           <div style={{display:'flex',gap:'.32rem',flexWrap:'wrap'}}>
-            {rx.medications.map((m,i)=><span key={i} style={{background:'#0d1e2c',border:'1px solid #1e3650',borderRadius:5,padding:'1px 7px',color:'#7ab0d4',fontSize:'.7rem'}}>{m.name} {m.dose}</span>)}
+            {(rx.medications||[]).map((m,i)=><span key={i} style={{background:'#0d1e2c',border:'1px solid #1e3650',borderRadius:5,padding:'1px 7px',color:'#7ab0d4',fontSize:'.7rem'}}>{m.name} {m.dose}</span>)}
           </div>
         </Card>);})}
     </div>
     {viewRx&&<Modal title="Prescription Details" onClose={()=>setViewRx(null)}>
-      {(()=>{const pt=db.patients.find(p=>p.id===viewRx.patientId);const dr=db.doctors.find(d=>d.id===viewRx.doctorId);return(<>
+      {(()=>{const pt=(db.patients||[]).find(p=>p.id===viewRx.patientId);const dr=(db.doctors||[]).find(d=>d.id===viewRx.doctorId);return(<>
         <G2 style={{marginBottom:'1rem'}}>{[['Patient',pt?.name||'—'],['Doctor',dr?.name||'—'],['Date',viewRx.date],['Next Visit',viewRx.nextVisit||'—']].map(([k,v])=>(
           <div key={k} style={{background:'#060c16',borderRadius:8,padding:'.5rem .72rem'}}><div style={{color:'#2e4a60',fontSize:'.66rem',textTransform:'uppercase',marginBottom:2}}>{k}</div><div style={{color:'#e0f0fc',fontWeight:600,fontSize:'.84rem'}}>{v}</div></div>
         ))}</G2>
         <div style={{background:'#060c16',border:'1px solid #1e3650',borderRadius:10,padding:'1rem',marginBottom:'1rem'}}>
-          <div style={{color:'#2e4a60',fontSize:'.66rem',textTransform:'uppercase',marginBottom:8}}>Medications</div>
-          {viewRx.medications.map((m,i)=><div key={i} style={{display:'grid',gridTemplateColumns:'2fr 1fr 1.5fr 1fr',gap:'.4rem',marginBottom:5,alignItems:'center'}}><span style={{color:'#e0f0fc',fontWeight:600,fontSize:'.84rem'}}>{m.name}</span><span style={{color:'#7ab0d4',fontSize:'.82rem'}}>{m.dose}</span><span style={{color:'#4a7090',fontSize:'.76rem'}}>{m.frequency}</span><span style={{color:'#2e4a60',fontSize:'.76rem'}}>{m.duration}</span></div>)}
+          {(viewRx.medications||[]).map((m,i)=><div key={i} style={{display:'grid',gridTemplateColumns:'2fr 1fr 1.5fr 1fr',gap:'.4rem',marginBottom:5}}><span style={{color:'#e0f0fc',fontWeight:600,fontSize:'.84rem'}}>{m.name}</span><span style={{color:'#7ab0d4',fontSize:'.82rem'}}>{m.dose}</span><span style={{color:'#4a7090',fontSize:'.76rem'}}>{m.frequency}</span><span style={{color:'#2e4a60',fontSize:'.76rem'}}>{m.duration}</span></div>)}
         </div>
         {viewRx.notes&&<div style={{color:'#4a7090',fontSize:'.82rem',marginBottom:'1rem'}}>{viewRx.notes}</div>}
         <Btn full icon="print" onClick={()=>printPrescription(viewRx,db)}>Print Prescription</Btn>
       </>)})()}
     </Modal>}
     {modal&&<Modal title={editId?'Edit Rx':'Write Prescription'} onClose={()=>{setModal(false);setEditId(null);setForm(blank)}}>
-      <FS label="Patient" value={form.patientId} onChange={v=>setForm(f=>({...f,patientId:v}))} options={[{value:'',label:'Select Patient…'},...db.patients.map(p=>({value:String(p.id),label:p.name}))]}/>
-      <FS label="Doctor" value={form.doctorId} onChange={v=>setForm(f=>({...f,doctorId:v}))} options={[{value:'',label:'Select Doctor…'},...db.doctors.map(d=>({value:String(d.id),label:d.name}))]}/>
+      <FS label="Patient" value={form.patientId} onChange={v=>setForm(f=>({...f,patientId:v}))} options={[{value:'',label:'Select Patient…'},...(db.patients||[]).map(p=>({value:String(p.id),label:p.name}))]}/>
+      <FS label="Doctor" value={form.doctorId} onChange={v=>setForm(f=>({...f,doctorId:v}))} options={[{value:'',label:'Select Doctor…'},...(db.doctors||[]).map(d=>({value:String(d.id),label:d.name}))]}/>
       <FI label="Date" type="date" value={form.date} onChange={v=>setForm(f=>({...f,date:v}))}/>
       <div style={{marginBottom:'1rem'}}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
@@ -1011,8 +732,8 @@ const Prescriptions=({db,setDb,can})=>{
         {form.meds.map((m,i)=>(
           <div key={i} style={{background:'#060c16',border:'1px solid #1e3650',borderRadius:8,padding:'.62rem',marginBottom:5}}>
             <div style={{display:'grid',gridTemplateColumns:'2fr 1fr 1.5fr 1fr auto',gap:5}}>
-              {[['Drug name','name'],['Dose','dose'],['Frequency','frequency'],['Duration','duration']].map(([ph,f])=>(
-                <input key={f} placeholder={ph} value={m[f]} onChange={e=>updMed(i,f,e.target.value)}
+              {[['Drug name','name'],['Dose','dose'],['Frequency','frequency'],['Duration','duration']].map(([ph,fi])=>(
+                <input key={fi} placeholder={ph} value={m[fi]} onChange={e=>updMed(i,fi,e.target.value)}
                   style={{background:'transparent',border:'none',borderBottom:'1px solid #1e3650',color:'#e0f0fc',padding:'3px 0',outline:'none',fontSize:'.83rem'}}/>
               ))}
               {form.meds.length>1&&<button onClick={()=>setForm(f=>({...f,meds:f.meds.filter((_,j)=>j!==i)}))} style={{background:'none',border:'none',color:'#502020',cursor:'pointer',padding:0,display:'flex',alignItems:'center'}}><Icon n="trash" s={13}/></button>}
@@ -1027,23 +748,22 @@ const Prescriptions=({db,setDb,can})=>{
   </div>);
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// INVOICES
-// ═══════════════════════════════════════════════════════════════════════════════
+// ─── INVOICES ────────────────────────────────────────────────────────────────
 const Invoices=({db,setDb,can})=>{
   const[modal,setModal]=useState(false);const[viewDoc,setViewDoc]=useState(null);const[editId,setEditId]=useState(null);const[payDoc,setPayDoc]=useState(null);
   const blank={patientId:'',doctorId:'',date:today(),dueDate:'',items:[{desc:'',qty:1,rate:0,amount:0}],tax:0,discount:0,paid:0,notes:'',payments:[]};
   const[form,setForm]=useState(blank);
-  const save=()=>{if(!form.patientId)return;const sub=form.items.reduce((a,x)=>a+(Number(x.qty)*Number(x.rate)||0),0);const total=sub+Number(form.tax)-Number(form.discount);const paid=Number(form.paid);const status=paid>=total?'paid':paid>0?'partial':'unpaid';const d={...form,patientId:Number(form.patientId),doctorId:Number(form.doctorId),subtotal:sub,total,paid,status};if(editId)setDb(x=>({...x,invoices:x.invoices.map(i=>i.id===editId?{...d,id:editId}:i)}));else setDb(x=>({...x,invoices:[...x.invoices,{...d,id:uid('INV')}]}));setModal(false);setForm(blank);setEditId(null);};
-  const del=id=>{setDb(x=>({...x,invoices:x.invoices.filter(i=>i.id!==id)}));};
-  const applyPay=updated=>setDb(x=>({...x,invoices:x.invoices.map(i=>i.id===updated.id?updated:i)}));
+  const invoices=db.invoices||[];
+  const save=()=>{if(!form.patientId)return;const sub=form.items.reduce((a,x)=>a+(Number(x.qty)*Number(x.rate)||0),0);const total=sub+Number(form.tax)-Number(form.discount);const paid=Number(form.paid);const status=paid>=total?'paid':paid>0?'partial':'unpaid';const d={...form,patientId:Number(form.patientId),doctorId:Number(form.doctorId),subtotal:sub,total,paid,status};if(editId)setDb(x=>({...x,invoices:(x.invoices||[]).map(i=>i.id===editId?{...d,id:editId}:i)}));else setDb(x=>({...x,invoices:[...(x.invoices||[]),{...d,id:uid('INV')}]}));setModal(false);setForm(blank);setEditId(null);};
+  const del=id=>setDb(x=>({...x,invoices:(x.invoices||[]).filter(i=>i.id!==id)}));
+  const applyPay=updated=>setDb(x=>({...x,invoices:(x.invoices||[]).map(i=>i.id===updated.id?updated:i)}));
   return(<div>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.1rem'}}>
       <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:'1.55rem',color:'#e0f0fc',margin:0}}>Invoices</h2>
       {can('edit_invoices')&&<Btn icon="plus" onClick={()=>{setForm(blank);setEditId(null);setModal(true)}}>New Invoice</Btn>}
     </div>
     <div style={{display:'grid',gap:'.52rem'}}>
-      {[...db.invoices].reverse().map(inv=>{const pt=db.patients.find(p=>p.id===inv.patientId);return(
+      {[...invoices].reverse().map(inv=>{const pt=(db.patients||[]).find(p=>p.id===inv.patientId);return(
         <Card key={inv.id} onClick={()=>setViewDoc(inv)} style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
           <div><div style={{display:'flex',gap:'.62rem',alignItems:'center'}}><span style={{color:'#4a90d9',fontWeight:700,fontSize:'.84rem'}}>{inv.id}</span><span style={{color:'#e0f0fc',fontWeight:600}}>{pt?.name||'—'}</span><Badge status={inv.status}/></div>
           <div style={{color:'#4a7090',fontSize:'.72rem',marginTop:3}}>{inv.date} · Due: {inv.dueDate||'—'}</div></div>
@@ -1056,11 +776,12 @@ const Invoices=({db,setDb,can})=>{
             </div>
           </div>
         </Card>);})}
+      {invoices.length===0&&<div style={{color:'#2e4a60',textAlign:'center',padding:'3rem'}}>No invoices yet.</div>}
     </div>
     {viewDoc&&<DocViewModal doc={viewDoc} docType="invoice" db={db} onClose={()=>setViewDoc(null)} onPay={setPayDoc} onEdit={d=>{setForm({...d,patientId:String(d.patientId),doctorId:String(d.doctorId),payments:d.payments||[]});setEditId(d.id);setModal(true);}} onDelete={del} canPay={can('pay_invoices')} canEdit={can('edit_invoices')}/>}
     {modal&&<Modal title={editId?'Edit Invoice':'New Invoice'} onClose={()=>{setModal(false);setEditId(null);setForm(blank)}} wide>
-      <G2><FS label="Patient" value={form.patientId} onChange={v=>setForm(f=>({...f,patientId:v}))} options={[{value:'',label:'Select Patient…'},...db.patients.map(p=>({value:String(p.id),label:p.name}))]}/>
-        <FS label="Doctor" value={form.doctorId} onChange={v=>setForm(f=>({...f,doctorId:v}))} options={[{value:'',label:'Select Doctor…'},...db.doctors.map(d=>({value:String(d.id),label:d.name}))]}/>
+      <G2><FS label="Patient" value={form.patientId} onChange={v=>setForm(f=>({...f,patientId:v}))} options={[{value:'',label:'Select Patient…'},...(db.patients||[]).map(p=>({value:String(p.id),label:p.name}))]}/>
+        <FS label="Doctor" value={form.doctorId} onChange={v=>setForm(f=>({...f,doctorId:v}))} options={[{value:'',label:'Select Doctor…'},...(db.doctors||[]).map(d=>({value:String(d.id),label:d.name}))]}/>
         <FI label="Date" type="date" value={form.date} onChange={v=>setForm(f=>({...f,date:v}))}/>
         <FI label="Due Date" type="date" value={form.dueDate} onChange={v=>setForm(f=>({...f,dueDate:v}))}/>
       </G2>
@@ -1073,26 +794,25 @@ const Invoices=({db,setDb,can})=>{
       <FTA label="Notes" value={form.notes} onChange={v=>setForm(f=>({...f,notes:v}))} rows={2}/>
       <Btn full onClick={save}>{editId?'Update':'Create'} Invoice</Btn>
     </Modal>}
-    {payDoc&&<PayModal doc={payDoc} docType="invoice" onSave={d=>{applyPay(d);setPayDoc(null);showToast('Payment recorded!');}} onClose={()=>setPayDoc(null)}/>}
+    {payDoc&&<PayModal doc={payDoc} onSave={d=>{applyPay(d);setPayDoc(null);showToast('Payment recorded!');}} onClose={()=>setPayDoc(null)}/>}
   </div>);
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// RECEIPTS
-// ═══════════════════════════════════════════════════════════════════════════════
+// ─── RECEIPTS ────────────────────────────────────────────────────────────────
 const Receipts=({db,setDb,can})=>{
   const[modal,setModal]=useState(false);const[editId,setEditId]=useState(null);const[viewRcp,setViewRcp]=useState(null);
   const blank={patientId:'',invoiceId:'',date:today(),amount:'',method:'Cash',notes:''};
   const[form,setForm]=useState(blank);
-  const save=()=>{if(!form.patientId||!form.amount)return;const d={...form,patientId:Number(form.patientId),amount:Number(form.amount)};if(editId)setDb(x=>({...x,receipts:x.receipts.map(r=>r.id===editId?{...d,id:editId}:r)}));else setDb(x=>({...x,receipts:[...x.receipts,{...d,id:uid('RCP')}]}));setModal(false);setForm(blank);setEditId(null);};
-  const del=id=>{if(window.confirm('Delete?'))setDb(x=>({...x,receipts:x.receipts.filter(r=>r.id!==id)}));};
+  const receipts=db.receipts||[];
+  const save=()=>{if(!form.patientId||!form.amount)return;const d={...form,patientId:Number(form.patientId),amount:Number(form.amount)};if(editId)setDb(x=>({...x,receipts:(x.receipts||[]).map(r=>r.id===editId?{...d,id:editId}:r)}));else setDb(x=>({...x,receipts:[...(x.receipts||[]),{...d,id:uid('RCP')}]}));setModal(false);setForm(blank);setEditId(null);};
+  const del=id=>{if(window.confirm('Delete?'))setDb(x=>({...x,receipts:(x.receipts||[]).filter(r=>r.id!==id)}));};
   return(<div>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.1rem'}}>
       <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:'1.55rem',color:'#e0f0fc',margin:0}}>Sales Receipts</h2>
       {can('edit_receipts')&&<Btn icon="plus" onClick={()=>{setForm(blank);setEditId(null);setModal(true)}}>New Receipt</Btn>}
     </div>
     <div style={{display:'grid',gap:'.52rem'}}>
-      {[...db.receipts].reverse().map(rcp=>{const pt=db.patients.find(p=>p.id===rcp.patientId);return(
+      {[...receipts].reverse().map(rcp=>{const pt=(db.patients||[]).find(p=>p.id===rcp.patientId);return(
         <Card key={rcp.id} onClick={()=>setViewRcp(rcp)} style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
           <div><div style={{display:'flex',gap:'.62rem',alignItems:'center'}}><span style={{color:'#38c878',fontWeight:700,fontSize:'.84rem'}}>{rcp.id}</span><span style={{color:'#e0f0fc',fontWeight:600}}>{pt?.name||'—'}</span></div>
           <div style={{color:'#4a7090',fontSize:'.72rem',marginTop:3}}>{rcp.date} · {rcp.method}{rcp.invoiceId?` · ${rcp.invoiceId}`:''}</div></div>
@@ -1104,9 +824,10 @@ const Receipts=({db,setDb,can})=>{
             </div>
           </div>
         </Card>);})}
+      {receipts.length===0&&<div style={{color:'#2e4a60',textAlign:'center',padding:'3rem'}}>No receipts yet.</div>}
     </div>
     {viewRcp&&<Modal title={`Receipt ${viewRcp.id}`} onClose={()=>setViewRcp(null)}>
-      {(()=>{const pt=db.patients.find(p=>p.id===viewRcp.patientId);return(<>
+      {(()=>{const pt=(db.patients||[]).find(p=>p.id===viewRcp.patientId);return(<>
         <div style={{textAlign:'center',padding:'1.3rem',background:'#060c16',borderRadius:12,marginBottom:'1rem'}}>
           <div style={{color:'#38c878',fontSize:'1.9rem',fontWeight:800,fontFamily:"'Cormorant Garamond',serif"}}>{fmtPKR(viewRcp.amount)}</div>
           <div style={{color:'#4a7090',marginTop:3}}>Amount Received</div>
@@ -1121,8 +842,8 @@ const Receipts=({db,setDb,can})=>{
       </>)})()}
     </Modal>}
     {modal&&<Modal title={editId?'Edit Receipt':'New Receipt'} onClose={()=>{setModal(false);setEditId(null);setForm(blank)}}>
-      <FS label="Patient" value={form.patientId} onChange={v=>setForm(f=>({...f,patientId:v}))} options={[{value:'',label:'Select Patient…'},...db.patients.map(p=>({value:String(p.id),label:p.name}))]}/>
-      <FS label="Invoice (optional)" value={form.invoiceId} onChange={v=>setForm(f=>({...f,invoiceId:v}))} options={[{value:'',label:'No Invoice'},...db.invoices.map(i=>({value:i.id,label:i.id}))]}/>
+      <FS label="Patient" value={form.patientId} onChange={v=>setForm(f=>({...f,patientId:v}))} options={[{value:'',label:'Select Patient…'},...(db.patients||[]).map(p=>({value:String(p.id),label:p.name}))]}/>
+      <FS label="Invoice (optional)" value={form.invoiceId} onChange={v=>setForm(f=>({...f,invoiceId:v}))} options={[{value:'',label:'No Invoice'},...(db.invoices||[]).map(i=>({value:i.id,label:i.id}))]}/>
       <FI label="Date" type="date" value={form.date} onChange={v=>setForm(f=>({...f,date:v}))}/>
       <FI label="Amount (PKR)" type="number" value={form.amount} onChange={v=>setForm(f=>({...f,amount:v}))} required/>
       <FS label="Payment Method" value={form.method} onChange={v=>setForm(f=>({...f,method:v}))} options={['Cash','Card','Bank Transfer','Cheque','JazzCash','EasyPaisa']}/>
@@ -1132,23 +853,22 @@ const Receipts=({db,setDb,can})=>{
   </div>);
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// BILLS
-// ═══════════════════════════════════════════════════════════════════════════════
+// ─── BILLS ───────────────────────────────────────────────────────────────────
 const Bills=({db,setDb,can})=>{
   const[modal,setModal]=useState(false);const[viewDoc,setViewDoc]=useState(null);const[editId,setEditId]=useState(null);const[payDoc,setPayDoc]=useState(null);
   const blank={supplierId:'',date:today(),dueDate:'',items:[{desc:'',qty:1,rate:0,amount:0}],tax:0,paid:0,notes:'',payments:[]};
   const[form,setForm]=useState(blank);
-  const save=()=>{if(!form.supplierId)return;const sub=form.items.reduce((a,x)=>a+(Number(x.qty)*Number(x.rate)||0),0);const total=sub+Number(form.tax);const paid=Number(form.paid);const status=paid>=total?'paid':paid>0?'partial':'unpaid';const d={...form,supplierId:Number(form.supplierId),subtotal:sub,total,paid,status};if(editId)setDb(x=>({...x,bills:x.bills.map(b=>b.id===editId?{...d,id:editId}:b)}));else setDb(x=>({...x,bills:[...x.bills,{...d,id:uid('BILL')}]}));setModal(false);setForm(blank);setEditId(null);};
-  const del=id=>{if(window.confirm('Delete?'))setDb(x=>({...x,bills:x.bills.filter(b=>b.id!==id)}));};
-  const applyPay=updated=>setDb(x=>({...x,bills:x.bills.map(b=>b.id===updated.id?updated:b)}));
+  const bills=db.bills||[];
+  const save=()=>{if(!form.supplierId)return;const sub=form.items.reduce((a,x)=>a+(Number(x.qty)*Number(x.rate)||0),0);const total=sub+Number(form.tax);const paid=Number(form.paid);const status=paid>=total?'paid':paid>0?'partial':'unpaid';const d={...form,supplierId:Number(form.supplierId),subtotal:sub,total,paid,status};if(editId)setDb(x=>({...x,bills:(x.bills||[]).map(b=>b.id===editId?{...d,id:editId}:b)}));else setDb(x=>({...x,bills:[...(x.bills||[]),{...d,id:uid('BILL')}]}));setModal(false);setForm(blank);setEditId(null);};
+  const del=id=>{if(window.confirm('Delete?'))setDb(x=>({...x,bills:(x.bills||[]).filter(b=>b.id!==id)}));};
+  const applyPay=updated=>setDb(x=>({...x,bills:(x.bills||[]).map(b=>b.id===updated.id?updated:b)}));
   return(<div>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.1rem'}}>
       <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:'1.55rem',color:'#e0f0fc',margin:0}}>Bills</h2>
       {can('edit_bills')&&<Btn icon="plus" onClick={()=>{setForm(blank);setEditId(null);setModal(true)}}>New Bill</Btn>}
     </div>
     <div style={{display:'grid',gap:'.52rem'}}>
-      {[...db.bills].reverse().map(bill=>{const sp=db.suppliers.find(s=>s.id===bill.supplierId);return(
+      {[...bills].reverse().map(bill=>{const sp=(db.suppliers||[]).find(s=>s.id===bill.supplierId);return(
         <Card key={bill.id} onClick={()=>setViewDoc(bill)} style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
           <div><div style={{display:'flex',gap:'.62rem',alignItems:'center'}}><span style={{color:'#c084fc',fontWeight:700,fontSize:'.84rem'}}>{bill.id}</span><span style={{color:'#e0f0fc',fontWeight:600}}>{sp?.name||'—'}</span><Badge status={bill.status}/></div>
           <div style={{color:'#4a7090',fontSize:'.72rem',marginTop:3}}>{bill.date} · Due: {bill.dueDate||'—'}</div></div>
@@ -1161,31 +881,31 @@ const Bills=({db,setDb,can})=>{
             </div>
           </div>
         </Card>);})}
+      {bills.length===0&&<div style={{color:'#2e4a60',textAlign:'center',padding:'3rem'}}>No bills yet.</div>}
     </div>
     {viewDoc&&<DocViewModal doc={viewDoc} docType="bill" db={db} onClose={()=>setViewDoc(null)} onPay={setPayDoc} onEdit={d=>{setForm({...d,supplierId:String(d.supplierId),payments:d.payments||[]});setEditId(d.id);setModal(true);}} onDelete={del} canPay={can('pay_bills')} canEdit={can('edit_bills')}/>}
     {modal&&<Modal title={editId?'Edit Bill':'New Bill'} onClose={()=>{setModal(false);setEditId(null);setForm(blank)}} wide>
-      <FS label="Supplier" value={form.supplierId} onChange={v=>setForm(f=>({...f,supplierId:v}))} options={[{value:'',label:'Select Supplier…'},...db.suppliers.map(s=>({value:String(s.id),label:s.name}))]}/>
+      <FS label="Supplier" value={form.supplierId} onChange={v=>setForm(f=>({...f,supplierId:v}))} options={[{value:'',label:'Select Supplier…'},...(db.suppliers||[]).map(s=>({value:String(s.id),label:s.name}))]}/>
       <G2><FI label="Date" type="date" value={form.date} onChange={v=>setForm(f=>({...f,date:v}))}/><FI label="Due Date" type="date" value={form.dueDate} onChange={v=>setForm(f=>({...f,dueDate:v}))}/></G2>
       <LineItems items={form.items} setItems={items=>setForm(f=>({...f,items}))}/>
       <G2><FI label="Tax (PKR)" type="number" value={form.tax} onChange={v=>setForm(f=>({...f,tax:v}))}/><FI label="Amount Paid" type="number" value={form.paid} onChange={v=>setForm(f=>({...f,paid:v}))}/></G2>
       <FTA label="Notes" value={form.notes} onChange={v=>setForm(f=>({...f,notes:v}))} rows={2}/>
       <Btn full onClick={save}>{editId?'Update':'Create'} Bill</Btn>
     </Modal>}
-    {payDoc&&<PayModal doc={payDoc} docType="bill" onSave={d=>{applyPay(d);setPayDoc(null);showToast('Payment recorded!');}} onClose={()=>setPayDoc(null)}/>}
+    {payDoc&&<PayModal doc={payDoc} onSave={d=>{applyPay(d);setPayDoc(null);showToast('Payment recorded!');}} onClose={()=>setPayDoc(null)}/>}
   </div>);
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// EXPENSES
-// ═══════════════════════════════════════════════════════════════════════════════
+// ─── EXPENSES ────────────────────────────────────────────────────────────────
 const Expenses=({db,setDb,can})=>{
   const[modal,setModal]=useState(false);const[editId,setEditId]=useState(null);const[viewExp,setViewExp]=useState(null);
   const blank={category:'Utilities',date:today(),description:'',amount:'',paymentMethod:'Cash',notes:''};
   const[form,setForm]=useState(blank);
   const cats=['Utilities','Salaries','Rent','Supplies','Maintenance','Marketing','Insurance','Other'];
-  const save=()=>{if(!form.description||!form.amount)return;const d={...form,amount:Number(form.amount)};if(editId)setDb(x=>({...x,expenses:x.expenses.map(e=>e.id===editId?{...d,id:editId}:e)}));else setDb(x=>({...x,expenses:[...x.expenses,{...d,id:uid('EXP')}]}));setModal(false);setForm(blank);setEditId(null);};
-  const del=id=>{if(window.confirm('Delete?'))setDb(x=>({...x,expenses:x.expenses.filter(e=>e.id!==id)}));};
-  const catTotals=cats.map(c=>({c,t:db.expenses.filter(e=>e.category===c).reduce((a,e)=>a+e.amount,0)})).filter(x=>x.t>0);
+  const expenses=db.expenses||[];
+  const save=()=>{if(!form.description||!form.amount)return;const d={...form,amount:Number(form.amount)};if(editId)setDb(x=>({...x,expenses:(x.expenses||[]).map(e=>e.id===editId?{...d,id:editId}:e)}));else setDb(x=>({...x,expenses:[...(x.expenses||[]),{...d,id:uid('EXP')}]}));setModal(false);setForm(blank);setEditId(null);};
+  const del=id=>{if(window.confirm('Delete?'))setDb(x=>({...x,expenses:(x.expenses||[]).filter(e=>e.id!==id)}));};
+  const catTotals=cats.map(c=>({c,t:expenses.filter(e=>e.category===c).reduce((a,e)=>a+e.amount,0)})).filter(x=>x.t>0);
   return(<div>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.1rem'}}>
       <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:'1.55rem',color:'#e0f0fc',margin:0}}>Expenses</h2>
@@ -1195,7 +915,7 @@ const Expenses=({db,setDb,can})=>{
       {catTotals.map(x=><div key={x.c} style={{background:'#060c16',border:'1px solid #1e3650',borderRadius:10,padding:'.62rem .82rem'}}><div style={{color:'#4a7090',fontSize:'.66rem',textTransform:'uppercase'}}>{x.c}</div><div style={{color:'#d95050',fontWeight:700,marginTop:3,fontSize:'.88rem'}}>{fmtPKR(x.t)}</div></div>)}
     </div>}
     <div style={{display:'grid',gap:'.52rem'}}>
-      {[...db.expenses].reverse().map(e=>(
+      {[...expenses].reverse().map(e=>(
         <Card key={e.id} onClick={()=>setViewExp(e)} style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
           <div><div style={{display:'flex',gap:'.62rem',alignItems:'center'}}><span style={{color:'#c084fc',fontSize:'.69rem',background:'#1a0d2a',borderRadius:5,padding:'2px 7px'}}>{e.category}</span><span style={{color:'#e0f0fc',fontWeight:600}}>{e.description}</span></div>
           <div style={{color:'#4a7090',fontSize:'.72rem',marginTop:3}}>{e.date} · {e.paymentMethod}</div></div>
@@ -1208,14 +928,13 @@ const Expenses=({db,setDb,can})=>{
           </div>
         </Card>
       ))}
+      {expenses.length===0&&<div style={{color:'#2e4a60',textAlign:'center',padding:'3rem'}}>No expenses yet.</div>}
     </div>
     {viewExp&&<Modal title={`Expense ${viewExp.id}`} onClose={()=>setViewExp(null)}>
       <G2>{[['ID',viewExp.id],['Date',viewExp.date],['Category',viewExp.category],['Method',viewExp.paymentMethod]].map(([k,v])=>(
         <div key={k} style={{background:'#060c16',borderRadius:8,padding:'.5rem .72rem'}}><div style={{color:'#2e4a60',fontSize:'.66rem',textTransform:'uppercase',marginBottom:2}}>{k}</div><div style={{color:'#e0f0fc',fontWeight:600,fontSize:'.84rem'}}>{v}</div></div>
       ))}</G2>
-      <div style={{background:'#060c16',border:'1px solid #1e3650',borderRadius:8,padding:'.5rem .72rem',margin:'.5rem 0 1rem'}}><div style={{color:'#2e4a60',fontSize:'.66rem',textTransform:'uppercase',marginBottom:2}}>Description</div><div style={{color:'#e0f0fc',fontWeight:600}}>{viewExp.description}</div></div>
-      <div style={{textAlign:'center',padding:'1.1rem',background:'#060c16',borderRadius:12,marginBottom:'1rem'}}><div style={{color:'#d95050',fontSize:'1.8rem',fontWeight:800,fontFamily:"'Cormorant Garamond',serif"}}>{fmtPKR(viewExp.amount)}</div></div>
-      {viewExp.notes&&<div style={{color:'#4a7090',fontSize:'.8rem',marginBottom:'1rem'}}>Notes: {viewExp.notes}</div>}
+      <div style={{textAlign:'center',padding:'1.1rem',background:'#060c16',borderRadius:12,marginBottom:'1rem'}}><div style={{color:'#d95050',fontSize:'1.8rem',fontWeight:800,fontFamily:"'Cormorant Garamond',serif"}}>{fmtPKR(viewExp.amount)}</div><div style={{color:'#4a7090',fontSize:'.8rem',marginTop:4}}>{viewExp.description}</div></div>
       <div style={{display:'flex',gap:'.5rem'}}>
         <Btn full icon="print" onClick={()=>printExpense(viewExp,db)}>Print Expense</Btn>
         {can('edit_expenses')&&<><Btn ghost icon="edit" onClick={()=>{setViewExp(null);setForm({...viewExp,amount:String(viewExp.amount)});setEditId(viewExp.id);setModal(true);}}/><Btn ghost icon="trash" danger onClick={()=>{del(viewExp.id);setViewExp(null);}}/></>}
@@ -1233,25 +952,23 @@ const Expenses=({db,setDb,can})=>{
   </div>);
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// REPORTS
-// ═══════════════════════════════════════════════════════════════════════════════
+// ─── REPORTS ─────────────────────────────────────────────────────────────────
 const Reports=({db})=>{
   const[tab,setTab]=useState('overview');
-  const rev=db.invoices.reduce((a,i)=>a+i.paid,0);const cogs=db.bills.reduce((a,b)=>a+b.paid,0);const opex=db.expenses.reduce((a,e)=>a+e.amount,0);
+  const invoices=db.invoices||[];const bills=db.bills||[];const expenses=db.expenses||[];
+  const rev=invoices.reduce((a,i)=>a+i.paid,0);const cogs=bills.reduce((a,b)=>a+b.paid,0);const opex=expenses.reduce((a,e)=>a+e.amount,0);
   const gross=rev-cogs;const net=gross-opex;
-  const outstanding=db.invoices.filter(i=>i.status!=='paid').reduce((a,i)=>a+(i.total-i.paid),0);
-  const billsPayable=db.bills.filter(b=>b.status!=='paid').reduce((a,b)=>a+(b.total-b.paid),0);
-  const mData=[1,2,3,4].map(i=>{const m=`2026-0${i}`;const r=db.invoices.filter(x=>x.date.startsWith(m)).reduce((a,x)=>a+x.paid,0);const c=db.bills.filter(x=>x.date.startsWith(m)).reduce((a,x)=>a+x.paid,0);const e=db.expenses.filter(x=>x.date.startsWith(m)).reduce((a,x)=>a+x.amount,0);return{m:months[i-1],rev:r,cogs:c,exp:e,gross:r-c,net:r-c-e};});
+  const outstanding=invoices.filter(i=>i.status!=='paid').reduce((a,i)=>a+(i.total-i.paid),0);
+  const billsPayable=bills.filter(b=>b.status!=='paid').reduce((a,b)=>a+(b.total-b.paid),0);
+  const mData=[1,2,3,4].map(i=>{const m=`2026-0${i}`;const r=invoices.filter(x=>x.date.startsWith(m)).reduce((a,x)=>a+x.paid,0);const c=bills.filter(x=>x.date.startsWith(m)).reduce((a,x)=>a+x.paid,0);const e=expenses.filter(x=>x.date.startsWith(m)).reduce((a,x)=>a+x.amount,0);return{m:months[i-1],rev:r,cogs:c,exp:e,gross:r-c,net:r-c-e};});
   const Row=({label,value,indent,bold,top,color})=><div style={{display:'flex',justifyContent:'space-between',padding:'.32rem 0',paddingLeft:indent?'1.3rem':0,borderTop:top?'1px solid #1e3650':'none',fontWeight:bold?700:400}}><span style={{color:bold?'#e0f0fc':'#6a90a8',fontSize:'.84rem'}}>{label}</span><span style={{color:color||(bold?'#e0f0fc':'#9ab8cc'),fontSize:'.84rem'}}>{fmtPKR(Math.abs(value))}</span></div>;
-  const TABS=[['overview','Overview'],['pl','P&L'],['balance-sheet','Balance Sheet'],['detail','Detail']];
   return(<div>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.1rem'}}>
       <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:'1.55rem',color:'#e0f0fc',margin:0}}>Reports & Financials</h2>
-      <div style={{display:'flex',gap:'.38rem'}}><Btn sm ghost icon="print" onClick={()=>printPLReport(db)}>Print P&L</Btn></div>
+      <Btn sm ghost icon="print" onClick={()=>printPLReport(db)}>Print P&L</Btn>
     </div>
     <div style={{display:'flex',gap:'.38rem',marginBottom:'1.1rem',flexWrap:'wrap'}}>
-      {TABS.map(([k,l])=><button key={k} onClick={()=>setTab(k)} style={{background:tab===k?'#14508a':'transparent',border:tab===k?'none':'1px solid #1e3650',borderRadius:7,padding:'.32rem .82rem',color:tab===k?'#fff':'#4a7090',cursor:'pointer',fontWeight:tab===k?700:400,fontSize:'.78rem'}}>{l}</button>)}
+      {[['overview','Overview'],['pl','P&L'],['balance-sheet','Balance Sheet'],['detail','Detail']].map(([k,l])=><button key={k} onClick={()=>setTab(k)} style={{background:tab===k?'#14508a':'transparent',border:tab===k?'none':'1px solid #1e3650',borderRadius:7,padding:'.32rem .82rem',color:tab===k?'#fff':'#4a7090',cursor:'pointer',fontWeight:tab===k?700:400,fontSize:'.78rem'}}>{l}</button>)}
     </div>
     {tab==='overview'&&<div>
       <div className="grid-3" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'.65rem',marginBottom:'1.1rem'}}>
@@ -1268,9 +985,9 @@ const Reports=({db})=>{
     </div>}
     {tab==='pl'&&<Card>
       <div style={{display:'flex',justifyContent:'space-between',marginBottom:'1.1rem'}}><div style={{color:'#e0f0fc',fontFamily:"'Cormorant Garamond',serif",fontSize:'1.1rem',fontWeight:700}}>Profit & Loss Statement</div><div style={{color:'#2e4a60',fontSize:'.74rem'}}>All Time</div></div>
-      <div style={{marginBottom:'1rem'}}><div style={{color:'#4a90d9',fontSize:'.67rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:5,fontWeight:700}}>REVENUE</div><Row label="Patient Collections" value={rev} indent/><Row label="Total Revenue" value={rev} bold top color="#38c878"/></div>
-      <div style={{marginBottom:'1rem'}}><div style={{color:'#4a90d9',fontSize:'.67rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:5,fontWeight:700}}>COST OF GOODS SOLD</div><Row label="Supplier Bills Paid" value={cogs} indent/><Row label="COGS" value={cogs} bold top/><Row label="GROSS PROFIT" value={gross} bold top color={gross>=0?'#38c878':'#d95050'}/></div>
-      <div style={{marginBottom:'1rem'}}><div style={{color:'#4a90d9',fontSize:'.67rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:5,fontWeight:700}}>OPERATING EXPENSES</div>{db.expenses.map(e=><Row key={e.id} label={e.description} value={e.amount} indent/>)}<Row label="Total Expenses" value={opex} bold top/></div>
+      <div style={{marginBottom:'1rem'}}><Row label="Patient Collections" value={rev} indent/><Row label="Total Revenue" value={rev} bold top color="#38c878"/></div>
+      <div style={{marginBottom:'1rem'}}><Row label="Supplier Bills Paid" value={cogs} indent/><Row label="COGS" value={cogs} bold top/><Row label="GROSS PROFIT" value={gross} bold top color={gross>=0?'#38c878':'#d95050'}/></div>
+      <div style={{marginBottom:'1rem'}}>{expenses.map(e=><Row key={e.id} label={e.description} value={e.amount} indent/>)}<Row label="Total Expenses" value={opex} bold top/></div>
       <Row label="NET PROFIT / (LOSS)" value={net} bold top color={net>=0?'#38c878':'#d95050'}/>
     </Card>}
     {tab==='balance-sheet'&&<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'.9rem'}}>
@@ -1278,47 +995,36 @@ const Reports=({db})=>{
         <Row label="Accounts Receivable" value={outstanding} indent/><Row label="Revenue Collected" value={rev} indent/><Row label="TOTAL ASSETS" value={rev+outstanding} bold top color="#38c878"/></Card>
       <Card><div style={{color:'#d95050',fontSize:'.74rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:'1rem',fontWeight:700}}>LIABILITIES</div>
         <Row label="Bills Payable" value={billsPayable} indent/><Row label="TOTAL LIABILITIES" value={billsPayable} bold top color="#d95050"/>
-        <div style={{marginTop:'1rem'}}><div style={{color:'#4a90d9',fontSize:'.74rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:'1rem',fontWeight:700}}>EQUITY</div>
-        <Row label="Owner's Equity" value={rev+outstanding-billsPayable} indent color={(rev+outstanding-billsPayable)>=0?'#38c878':'#d95050'}/>
-        <Row label="TOTAL EQUITY" value={rev+outstanding-billsPayable} bold top color={(rev+outstanding-billsPayable)>=0?'#38c878':'#d95050'}/></div></Card>
+        <div style={{marginTop:'1rem'}}><Row label="Owner's Equity" value={rev+outstanding-billsPayable} indent color={(rev+outstanding-billsPayable)>=0?'#38c878':'#d95050'}/><Row label="TOTAL EQUITY" value={rev+outstanding-billsPayable} bold top color={(rev+outstanding-billsPayable)>=0?'#38c878':'#d95050'}/></div></Card>
     </div>}
     {tab==='detail'&&<div style={{display:'grid',gap:'1rem'}}>
       <Card><div style={{color:'#4a7090',fontSize:'.67rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:'1rem'}}>All Invoices</div>
+        {invoices.length===0?<div style={{color:'#2e4a60',textAlign:'center',padding:'2rem',fontSize:'.84rem'}}>No invoices yet.</div>:
         <table style={{width:'100%',borderCollapse:'collapse'}}>
           <thead><tr>{['ID','Patient','Date','Total','Paid','Outstanding','Status'].map(h=><th key={h} style={{color:'#2e4a60',fontSize:'.64rem',textTransform:'uppercase',padding:'.34rem .44rem',textAlign:'left',borderBottom:'1px solid #1e3650'}}>{h}</th>)}</tr></thead>
-          <tbody>{db.invoices.map(i=>{const pt=db.patients.find(p=>p.id===i.patientId);return<tr key={i.id}><td style={{color:'#4a90d9',padding:'.34rem .44rem',fontSize:'.79rem'}}>{i.id}</td><td style={{color:'#e0f0fc',padding:'.34rem .44rem',fontSize:'.79rem'}}>{pt?.name||'—'}</td><td style={{color:'#4a7090',padding:'.34rem .44rem',fontSize:'.76rem'}}>{i.date}</td><td style={{color:'#e0f0fc',padding:'.34rem .44rem',fontSize:'.79rem'}}>{fmtPKR(i.total)}</td><td style={{color:'#38c878',padding:'.34rem .44rem',fontSize:'.79rem'}}>{fmtPKR(i.paid)}</td><td style={{color:i.total-i.paid>0?'#e8a030':'#2e4a60',padding:'.34rem .44rem',fontSize:'.79rem'}}>{fmtPKR(i.total-i.paid)}</td><td style={{padding:'.34rem .44rem'}}><Badge status={i.status}/></td></tr>;})}
-          <tr style={{borderTop:'2px solid #1e3650'}}><td colSpan={3} style={{color:'#e0f0fc',padding:'.4rem .44rem',fontWeight:700,fontSize:'.8rem'}}>TOTAL</td><td style={{color:'#e0f0fc',padding:'.4rem .44rem',fontWeight:700,fontSize:'.8rem'}}>{fmtPKR(db.invoices.reduce((a,i)=>a+i.total,0))}</td><td style={{color:'#38c878',padding:'.4rem .44rem',fontWeight:700,fontSize:'.8rem'}}>{fmtPKR(rev)}</td><td style={{color:'#e8a030',padding:'.4rem .44rem',fontWeight:700,fontSize:'.8rem'}}>{fmtPKR(outstanding)}</td><td/></tr>
+          <tbody>{invoices.map(i=>{const pt=(db.patients||[]).find(p=>p.id===i.patientId);return<tr key={i.id}><td style={{color:'#4a90d9',padding:'.34rem .44rem',fontSize:'.79rem'}}>{i.id}</td><td style={{color:'#e0f0fc',padding:'.34rem .44rem',fontSize:'.79rem'}}>{pt?.name||'—'}</td><td style={{color:'#4a7090',padding:'.34rem .44rem',fontSize:'.76rem'}}>{i.date}</td><td style={{color:'#e0f0fc',padding:'.34rem .44rem',fontSize:'.79rem'}}>{fmtPKR(i.total)}</td><td style={{color:'#38c878',padding:'.34rem .44rem',fontSize:'.79rem'}}>{fmtPKR(i.paid)}</td><td style={{color:i.total-i.paid>0?'#e8a030':'#2e4a60',padding:'.34rem .44rem',fontSize:'.79rem'}}>{fmtPKR(i.total-i.paid)}</td><td style={{padding:'.34rem .44rem'}}><Badge status={i.status}/></td></tr>;})}
           </tbody>
-        </table>
-      </Card>
-      <Card><div style={{color:'#4a7090',fontSize:'.67rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:'1rem'}}>All Expenses</div>
-        <table style={{width:'100%',borderCollapse:'collapse'}}>
-          <thead><tr>{['ID','Category','Description','Date','Amount','Method'].map(h=><th key={h} style={{color:'#2e4a60',fontSize:'.64rem',textTransform:'uppercase',padding:'.34rem .44rem',textAlign:'left',borderBottom:'1px solid #1e3650'}}>{h}</th>)}</tr></thead>
-          <tbody>{db.expenses.map(e=><tr key={e.id}><td style={{color:'#c084fc',padding:'.34rem .44rem',fontSize:'.79rem'}}>{e.id}</td><td style={{color:'#4a7090',padding:'.34rem .44rem',fontSize:'.76rem'}}>{e.category}</td><td style={{color:'#e0f0fc',padding:'.34rem .44rem',fontSize:'.79rem'}}>{e.description}</td><td style={{color:'#4a7090',padding:'.34rem .44rem',fontSize:'.76rem'}}>{e.date}</td><td style={{color:'#d95050',padding:'.34rem .44rem',fontSize:'.79rem',fontWeight:600}}>{fmtPKR(e.amount)}</td><td style={{color:'#4a7090',padding:'.34rem .44rem',fontSize:'.76rem'}}>{e.paymentMethod}</td></tr>)}
-          <tr style={{borderTop:'2px solid #1e3650'}}><td colSpan={4} style={{color:'#e0f0fc',padding:'.4rem .44rem',fontWeight:700,fontSize:'.8rem'}}>TOTAL</td><td style={{color:'#d95050',padding:'.4rem .44rem',fontWeight:700,fontSize:'.8rem'}}>{fmtPKR(opex)}</td><td/></tr>
-          </tbody>
-        </table>
+        </table>}
       </Card>
     </div>}
   </div>);
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// DOCTORS
-// ═══════════════════════════════════════════════════════════════════════════════
+// ─── DOCTORS ─────────────────────────────────────────────────────────────────
 const Doctors=({db,setDb,can})=>{
   const[modal,setModal]=useState(false);const[editId,setEditId]=useState(null);
   const blank={name:'',specialization:'',phone:'',email:'',fee:'',active:true};
   const[form,setForm]=useState(blank);
-  const save=()=>{if(!form.name)return;const d={...form,fee:Number(form.fee)};if(editId)setDb(x=>({...x,doctors:x.doctors.map(dr=>dr.id===editId?{...d,id:editId}:dr)}));else setDb(x=>({...x,doctors:[...x.doctors,{...d,id:Date.now()}]}));setModal(false);setForm(blank);setEditId(null);};
-  const del=id=>{if(window.confirm('Remove?'))setDb(x=>({...x,doctors:x.doctors.filter(d=>d.id!==id)}));};
+  const doctors=db.doctors||[];
+  const save=()=>{if(!form.name)return;const d={...form,fee:Number(form.fee)};if(editId)setDb(x=>({...x,doctors:(x.doctors||[]).map(dr=>dr.id===editId?{...d,id:editId}:dr)}));else setDb(x=>({...x,doctors:[...(x.doctors||[]),{...d,id:Date.now()}]}));setModal(false);setForm(blank);setEditId(null);};
+  const del=id=>{if(window.confirm('Remove?'))setDb(x=>({...x,doctors:(x.doctors||[]).filter(d=>d.id!==id)}));};
   return(<div>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.1rem'}}>
       <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:'1.55rem',color:'#e0f0fc',margin:0}}>Doctors</h2>
       {can('edit_doctors')&&<Btn icon="plus" onClick={()=>{setForm(blank);setEditId(null);setModal(true)}}>Add Doctor</Btn>}
     </div>
     <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(275px,1fr))',gap:'.72rem'}}>
-      {db.doctors.map(dr=>(
+      {doctors.map(dr=>(
         <Card key={dr.id}>
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
             <div style={{display:'flex',gap:'.72rem',alignItems:'center'}}>
@@ -1346,15 +1052,14 @@ const Doctors=({db,setDb,can})=>{
   </div>);
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// SUPPLIERS
-// ═══════════════════════════════════════════════════════════════════════════════
+// ─── SUPPLIERS ───────────────────────────────────────────────────────────────
 const Suppliers=({db,setDb,can})=>{
   const[modal,setModal]=useState(false);const[editId,setEditId]=useState(null);
   const blank={name:'',contact:'',phone:'',email:'',address:'',category:'Dental Supplies'};
   const[form,setForm]=useState(blank);
-  const save=()=>{if(!form.name)return;if(editId)setDb(x=>({...x,suppliers:x.suppliers.map(s=>s.id===editId?{...form,id:editId}:s)}));else setDb(x=>({...x,suppliers:[...x.suppliers,{...form,id:Date.now()}]}));setModal(false);setForm(blank);setEditId(null);};
-  const del=id=>{if(window.confirm('Remove?'))setDb(x=>({...x,suppliers:x.suppliers.filter(s=>s.id!==id)}));};
+  const suppliers=db.suppliers||[];
+  const save=()=>{if(!form.name)return;if(editId)setDb(x=>({...x,suppliers:(x.suppliers||[]).map(s=>s.id===editId?{...form,id:editId}:s)}));else setDb(x=>({...x,suppliers:[...(x.suppliers||[]),{...form,id:Date.now()}]}));setModal(false);setForm(blank);setEditId(null);};
+  const del=id=>{if(window.confirm('Remove?'))setDb(x=>({...x,suppliers:(x.suppliers||[]).filter(s=>s.id!==id)}));};
   const cats=['Dental Supplies','Equipment','Real Estate','Utilities','Lab Services','Employee','Other'];
   return(<div>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.1rem'}}>
@@ -1362,7 +1067,7 @@ const Suppliers=({db,setDb,can})=>{
       {can('edit_suppliers')&&<Btn icon="plus" onClick={()=>{setForm(blank);setEditId(null);setModal(true)}}>Add Supplier</Btn>}
     </div>
     <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(275px,1fr))',gap:'.72rem'}}>
-      {db.suppliers.map(s=>{const outstanding=db.bills.filter(b=>b.supplierId===s.id).reduce((a,b)=>a+(b.total-b.paid),0);return(
+      {suppliers.map(s=>{const outstanding=(db.bills||[]).filter(b=>b.supplierId===s.id).reduce((a,b)=>a+(b.total-b.paid),0);return(
         <Card key={s.id}>
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
             <div><div style={{color:'#e0f0fc',fontWeight:700,fontSize:'.92rem'}}>{s.name}</div><div style={{color:'#c084fc',fontSize:'.72rem',marginTop:2}}>{s.category}</div></div>
@@ -1374,6 +1079,7 @@ const Suppliers=({db,setDb,can})=>{
             ))}
           </div>
         </Card>);})}
+      {suppliers.length===0&&<div style={{color:'#2e4a60',textAlign:'center',padding:'3rem'}}>No suppliers yet.</div>}
     </div>
     {modal&&<Modal title={editId?'Edit Supplier':'Add Supplier'} onClose={()=>{setModal(false);setEditId(null);setForm(blank)}}>
       <FI label="Company Name" value={form.name} onChange={v=>setForm(f=>({...f,name:v}))} required/>
@@ -1386,20 +1092,16 @@ const Suppliers=({db,setDb,can})=>{
   </div>);
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// USERS & ROLE PERMISSIONS
-// ═══════════════════════════════════════════════════════════════════════════════
+// ─── USERS PAGE ──────────────────────────────────────────────────────────────
 const UsersPage=({db,setDb,currentUser})=>{
-  const[tab,setTab]=useState('users');
-  const[modal,setModal]=useState(false);const[editId,setEditId]=useState(null);
+  const[tab,setTab]=useState('users');const[modal,setModal]=useState(false);const[editId,setEditId]=useState(null);
   const blank={name:'',email:'',password:'',role:'receptionist',active:true};
-  const[form,setForm]=useState(blank);
-  const[editRole,setEditRole]=useState('doctor');
+  const[form,setForm]=useState(blank);const[editRole,setEditRole]=useState('doctor');
   const perms=db.rolePermissions||DEFAULT_PERMS;
   const roleColors={admin:'#e8a030',doctor:'#4a90d9',accountant:'#38c878',receptionist:'#c084fc'};
   if(currentUser.role!=='admin') return <div style={{color:'#2e4a60',textAlign:'center',padding:'4rem'}}><Icon n="shield" s={40}/><p style={{marginTop:'1rem'}}>Access restricted to administrators only.</p></div>;
-  const save=()=>{if(!form.name||!form.email)return;if(editId)setDb(x=>({...x,users:x.users.map(u=>u.id===editId?{...form,id:editId}:u)}));else setDb(x=>({...x,users:[...x.users,{...form,id:Date.now()}]}));setModal(false);setForm(blank);setEditId(null);};
-  const del=id=>{if(id===currentUser.id){alert("Can't delete yourself.");return;}if(window.confirm('Delete?'))setDb(x=>({...x,users:x.users.filter(u=>u.id!==id)}));};
+  const save=()=>{if(!form.name||!form.email)return;if(editId)setDb(x=>({...x,users:(x.users||[]).map(u=>u.id===editId?{...form,id:editId}:u)}));else setDb(x=>({...x,users:[...(x.users||[]),{...form,id:Date.now()}]}));setModal(false);setForm(blank);setEditId(null);};
+  const del=id=>{if(id===currentUser.id){alert("Can't delete yourself.");return;}if(window.confirm('Delete?'))setDb(x=>({...x,users:(x.users||[]).filter(u=>u.id!==id)}));};
   const togglePerm=(role,perm)=>{const rp={...perms,[role]:perms[role].includes(perm)?perms[role].filter(p=>p!==perm):[...perms[role],perm]};setDb(x=>({...x,rolePermissions:rp}));};
   const permLabel=p=>p.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
   const permGroups=[['Clinical',['view_dashboard','view_patients','edit_patients','view_appointments','edit_appointments','view_history','edit_history','view_prescriptions','edit_prescriptions']],['Finance',['view_invoices','edit_invoices','pay_invoices','view_receipts','edit_receipts','view_bills','edit_bills','pay_bills','view_expenses','edit_expenses','view_reports']],['Admin',['view_doctors','edit_doctors','view_suppliers','edit_suppliers','view_users','edit_users','view_settings','edit_settings']]];
@@ -1411,20 +1113,16 @@ const UsersPage=({db,setDb,currentUser})=>{
     {tab==='users'&&<>
       <div style={{display:'flex',justifyContent:'flex-end',marginBottom:'1rem'}}><Btn icon="plus" onClick={()=>{setForm(blank);setEditId(null);setModal(true)}}>Add User</Btn></div>
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(265px,1fr))',gap:'.72rem'}}>
-        {db.users.map(u=>(
+        {(db.users||[]).map(u=>(
           <Card key={u.id}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
               <div style={{display:'flex',gap:'.68rem',alignItems:'center'}}>
-                <div style={{width:40,height:40,borderRadius:'50%',background:`linear-gradient(135deg,${roleColors[u.role]}44,${roleColors[u.role]}22)`,border:`1.5px solid ${roleColors[u.role]}55`,display:'flex',alignItems:'center',justifyContent:'center',color:roleColors[u.role],fontWeight:700,fontSize:'.95rem',flexShrink:0}}>{u.name.charAt(0)}</div>
-                <div><div style={{color:'#e0f0fc',fontWeight:700,display:'flex',gap:'.38rem',alignItems:'center'}}>{u.name}{u.id===currentUser.id&&<span style={{color:'#38c878',fontSize:'.6rem',background:'#0b3a22',borderRadius:4,padding:'1px 5px'}}>You</span>}</div><div style={{color:roleColors[u.role],fontSize:'.7rem',textTransform:'capitalize'}}>{u.role}</div></div>
+                <div style={{width:40,height:40,borderRadius:'50%',background:`linear-gradient(135deg,${roleColors[u.role]||'#4a7090'}44,${roleColors[u.role]||'#4a7090'}22)`,border:`1.5px solid ${roleColors[u.role]||'#4a7090'}55`,display:'flex',alignItems:'center',justifyContent:'center',color:roleColors[u.role]||'#4a7090',fontWeight:700,fontSize:'.95rem',flexShrink:0}}>{u.name.charAt(0)}</div>
+                <div><div style={{color:'#e0f0fc',fontWeight:700}}>{u.name}{u.id===currentUser.id&&<span style={{color:'#38c878',fontSize:'.6rem',background:'#0b3a22',borderRadius:4,padding:'1px 5px',marginLeft:6}}>You</span>}</div><div style={{color:roleColors[u.role]||'#4a7090',fontSize:'.7rem',textTransform:'capitalize'}}>{u.role}</div></div>
               </div>
               <div style={{display:'flex',gap:'.32rem'}}><Btn sm ghost icon="edit" onClick={()=>{setForm({...u});setEditId(u.id);setModal(true);}}/>{u.id!==currentUser.id&&<Btn sm ghost icon="trash" danger onClick={()=>del(u.id)}/>}</div>
             </div>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'.38rem',marginTop:'1rem'}}>
-              <div style={{background:'#060c16',borderRadius:7,padding:'.48rem .68rem',gridColumn:'1/-1'}}><div style={{color:'#2e4a60',fontSize:'.64rem',textTransform:'uppercase',marginBottom:2}}>Email</div><div style={{color:'#e0f0fc',fontSize:'.79rem'}}>{u.email}</div></div>
-              <div style={{background:'#060c16',borderRadius:7,padding:'.48rem .68rem'}}><div style={{color:'#2e4a60',fontSize:'.64rem',textTransform:'uppercase',marginBottom:2}}>Status</div><div style={{color:u.active?'#38c878':'#d95050',fontSize:'.79rem',fontWeight:600}}>{u.active?'Active':'Inactive'}</div></div>
-              <div style={{background:'#060c16',borderRadius:7,padding:'.48rem .68rem'}}><div style={{color:'#2e4a60',fontSize:'.64rem',textTransform:'uppercase',marginBottom:2}}>Permissions</div><div style={{color:'#4a7090',fontSize:'.75rem'}}>{(perms[u.role]||[]).length} granted</div></div>
-            </div>
+            <div style={{background:'#060c16',borderRadius:7,padding:'.48rem .68rem',marginTop:'1rem'}}><div style={{color:'#2e4a60',fontSize:'.64rem',textTransform:'uppercase',marginBottom:2}}>Email</div><div style={{color:'#e0f0fc',fontSize:'.79rem'}}>{u.email}</div></div>
           </Card>
         ))}
       </div>
@@ -1433,7 +1131,7 @@ const UsersPage=({db,setDb,currentUser})=>{
       <div style={{display:'flex',gap:'.38rem',marginBottom:'1.1rem',flexWrap:'wrap'}}>
         {['doctor','accountant','receptionist'].map(r=><button key={r} onClick={()=>setEditRole(r)} style={{background:editRole===r?roleColors[r]+'22':'transparent',border:`1px solid ${editRole===r?roleColors[r]:'#1e3650'}`,borderRadius:7,padding:'.32rem .82rem',color:editRole===r?roleColors[r]:'#4a7090',cursor:'pointer',fontWeight:editRole===r?700:400,fontSize:'.78rem',textTransform:'capitalize'}}>{r}</button>)}
       </div>
-      <Card style={{marginBottom:'1rem'}}>
+      <Card>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1rem'}}>
           <div style={{color:'#e0f0fc',fontWeight:700,textTransform:'capitalize'}}>{editRole} — {(perms[editRole]||[]).length}/{ALL_PERMS.length} permissions</div>
           <Btn sm ghost onClick={()=>setDb(x=>({...x,rolePermissions:{...perms,[editRole]:DEFAULT_PERMS[editRole]}}))}>Reset to Default</Btn>
@@ -1443,7 +1141,7 @@ const UsersPage=({db,setDb,currentUser})=>{
             <div style={{color:'#4a7090',fontSize:'.66rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:7,fontWeight:700}}>{group}</div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(215px,1fr))',gap:'.38rem'}}>
               {ps.map(p=>{const has=(perms[editRole]||[]).includes(p);return(
-                <label key={p} style={{display:'flex',alignItems:'center',gap:'.48rem',cursor:'pointer',background:has?'#0b3a22':'#060c16',border:`1px solid ${has?'#38c878':'#1e3650'}`,borderRadius:7,padding:'.38rem .68rem',transition:'all .15s'}}>
+                <label key={p} style={{display:'flex',alignItems:'center',gap:'.48rem',cursor:'pointer',background:has?'#0b3a22':'#060c16',border:`1px solid ${has?'#38c878':'#1e3650'}`,borderRadius:7,padding:'.38rem .68rem'}}>
                   <input type="checkbox" checked={has} onChange={()=>togglePerm(editRole,p)}/>
                   <span style={{color:has?'#38c878':'#4a7090',fontSize:'.74rem'}}>{permLabel(p)}</span>
                 </label>);})}
@@ -1463,25 +1161,22 @@ const UsersPage=({db,setDb,currentUser})=>{
   </div>);
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// SETTINGS
-// ═══════════════════════════════════════════════════════════════════════════════
-const Settings=({db,setDb,can,fbStatus})=>{
+// ─── SETTINGS ────────────────────────────────────────────────────────────────
+const Settings=({db,setDb,can})=>{
   const[tab,setTab]=useState('clinic');
   const s=db.settings||SEED.settings;
   const upd=v=>setDb(x=>({...x,settings:{...x.settings,...v}}));
   const logoRef=useRef();const importRef=useRef();
-  const handleLogo=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>upd({logo:ev.target.result});r.readAsDataURL(f);};
+  const handleLogo=e=>{const fi=e.target.files[0];if(!fi)return;const r=new FileReader();r.onload=ev=>upd({logo:ev.target.result});r.readAsDataURL(fi);};
   const editable=can('edit_settings');
   const exportData=()=>{const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`adc-backup-${today()}.json`;a.click();showToast('Backup downloaded!');};
-  const importData=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{try{const d=JSON.parse(ev.target.result);setDb(d);showToast('Data imported successfully!');}catch{showToast('Invalid backup file.',true);}};r.readAsText(f);};
+  const importData=e=>{const fi=e.target.files[0];if(!fi)return;const r=new FileReader();r.onload=ev=>{try{const d=JSON.parse(ev.target.result);setDb(safeDb(d));showToast('Data imported successfully!');}catch{showToast('Invalid backup file.',true);}};r.readAsText(fi);};
   const layouts=[{value:'classic',label:'Classic',desc:'Traditional with header bar'},{value:'modern',label:'Modern',desc:'Bold colored hero header'},{value:'minimal',label:'Minimal',desc:'Clean typographic style'}];
   if(!can('view_settings')) return <div style={{color:'#2e4a60',textAlign:'center',padding:'4rem'}}>Access denied.</div>;
-  const TABS=[['clinic','Clinic Info'],['documents','Document Layout'],['sync','Multi-Device Sync']];
   return(<div>
     <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:'1.55rem',color:'#e0f0fc',margin:'0 0 1.1rem'}}>Settings</h2>
     <div style={{display:'flex',gap:'.38rem',marginBottom:'1.1rem'}}>
-      {TABS.map(([k,l])=><button key={k} onClick={()=>setTab(k)} style={{background:tab===k?'#14508a':'transparent',border:tab===k?'none':'1px solid #1e3650',borderRadius:7,padding:'.32rem .82rem',color:tab===k?'#fff':'#4a7090',cursor:'pointer',fontWeight:tab===k?700:400,fontSize:'.78rem'}}>{l}</button>)}
+      {[['clinic','Clinic Info'],['documents','Document Layout'],['backup','Backup']].map(([k,l])=><button key={k} onClick={()=>setTab(k)} style={{background:tab===k?'#14508a':'transparent',border:tab===k?'none':'1px solid #1e3650',borderRadius:7,padding:'.32rem .82rem',color:tab===k?'#fff':'#4a7090',cursor:'pointer',fontWeight:tab===k?700:400,fontSize:'.78rem'}}>{l}</button>)}
     </div>
     {tab==='clinic'&&<Card>
       <div style={{display:'flex',gap:'1.3rem',alignItems:'flex-start',marginBottom:'1.3rem'}}>
@@ -1501,199 +1196,157 @@ const Settings=({db,setDb,can,fbStatus})=>{
           <div style={{gridColumn:'1/-1'}}><FI label="Address" value={s.address} onChange={v=>upd({address:v})} readOnly={!editable}/></div>
         </div>
       </div>
-      <G2><FI label="Currency Label" value={s.currency||'Rs.'} onChange={v=>upd({currency:v})} readOnly={!editable}/><FI label="Tax Label" value={s.taxLabel||'GST'} onChange={v=>upd({taxLabel:v})} readOnly={!editable}/></G2>
-      {editable&&<div style={{color:'#38c878',fontSize:'.76rem',marginTop:'.5rem',display:'flex',alignItems:'center',gap:5}}><Icon n="check" s={12}/>Settings saved automatically.</div>}
+      {editable&&<div style={{color:'#38c878',fontSize:'.76rem',display:'flex',alignItems:'center',gap:5}}><Icon n="check" s={12}/>Settings auto-save to Firebase.</div>}
     </Card>}
-    {tab==='documents'&&<div>
-      <Card style={{marginBottom:'1rem'}}>
-        <div style={{color:'#4a7090',fontSize:'.67rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:'1rem'}}>Invoice Layout</div>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'.65rem',marginBottom:'1.2rem'}}>
-          {layouts.map(l=>(
-            <div key={l.value} onClick={()=>editable&&upd({invoiceLayout:l.value})} style={{border:`2px solid ${s.invoiceLayout===l.value?'#14508a':'#1e3650'}`,borderRadius:12,padding:'.8rem',cursor:editable?'pointer':'default',background:s.invoiceLayout===l.value?'#0a1f35':'#060c16',transition:'all .15s'}}>
-              <div style={{color:s.invoiceLayout===l.value?'#4a90d9':'#e0f0fc',fontWeight:600,marginBottom:3}}>{l.label}</div>
-              <div style={{color:'#4a7090',fontSize:'.72rem'}}>{l.desc}</div>
-            </div>
-          ))}
-        </div>
-        <div style={{color:'#4a7090',fontSize:'.67rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:'1rem'}}>Receipt Layout</div>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'.65rem',marginBottom:'1.2rem'}}>
-          {layouts.map(l=>(
-            <div key={l.value} onClick={()=>editable&&upd({receiptLayout:l.value})} style={{border:`2px solid ${s.receiptLayout===l.value?'#14508a':'#1e3650'}`,borderRadius:12,padding:'.8rem',cursor:editable?'pointer':'default',background:s.receiptLayout===l.value?'#0a1f35':'#060c16',transition:'all .15s'}}>
-              <div style={{color:s.receiptLayout===l.value?'#4a90d9':'#e0f0fc',fontWeight:600,marginBottom:3}}>{l.label}</div>
-              <div style={{color:'#4a7090',fontSize:'.72rem'}}>{l.desc}</div>
-            </div>
-          ))}
-        </div>
-        <G2>
-          <div>
-            <div style={{color:'#4a7090',fontSize:'.67rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:7}}>Accent Color</div>
-            <div style={{display:'flex',gap:'.5rem',alignItems:'center'}}>
-              <input type="color" value={s.invoiceColor||'#1565a0'} onChange={e=>editable&&upd({invoiceColor:e.target.value})} style={{width:40,height:40,borderRadius:8,cursor:'pointer',border:'1px solid #1e3650',background:'none'}}/>
-              <span style={{color:'#e0f0fc',fontSize:'.84rem',fontWeight:600}}>{s.invoiceColor||'#1565a0'}</span>
-            </div>
+    {tab==='documents'&&<Card>
+      <div style={{color:'#4a7090',fontSize:'.67rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:'1rem'}}>Invoice Layout</div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'.65rem',marginBottom:'1.2rem'}}>
+        {layouts.map(l=>(
+          <div key={l.value} onClick={()=>editable&&upd({invoiceLayout:l.value})} style={{border:`2px solid ${s.invoiceLayout===l.value?'#14508a':'#1e3650'}`,borderRadius:12,padding:'.8rem',cursor:editable?'pointer':'default',background:s.invoiceLayout===l.value?'#0a1f35':'#060c16'}}>
+            <div style={{color:s.invoiceLayout===l.value?'#4a90d9':'#e0f0fc',fontWeight:600,marginBottom:3}}>{l.label}</div>
+            <div style={{color:'#4a7090',fontSize:'.72rem'}}>{l.desc}</div>
           </div>
-          <div>
-            <div style={{color:'#4a7090',fontSize:'.67rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:7}}>Logo on Documents</div>
-            <label style={{display:'flex',alignItems:'center',gap:'.48rem',cursor:'pointer'}}>
-              <input type="checkbox" checked={!!s.showLogoOnDocs} onChange={e=>editable&&upd({showLogoOnDocs:e.target.checked})}/>
-              <span style={{color:'#e0f0fc',fontSize:'.84rem'}}>Show logo on printed PDFs</span>
-            </label>
+        ))}
+      </div>
+      <G2>
+        <div>
+          <div style={{color:'#4a7090',fontSize:'.67rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:7}}>Accent Color</div>
+          <div style={{display:'flex',gap:'.5rem',alignItems:'center'}}>
+            <input type="color" value={s.invoiceColor||'#1565a0'} onChange={e=>editable&&upd({invoiceColor:e.target.value})} style={{width:40,height:40,borderRadius:8,cursor:'pointer',border:'1px solid #1e3650',background:'none'}}/>
+            <span style={{color:'#e0f0fc',fontSize:'.84rem',fontWeight:600}}>{s.invoiceColor||'#1565a0'}</span>
           </div>
-        </G2>
-        <FTA label="Invoice Footer Text" value={s.invoiceFooter} onChange={v=>editable&&upd({invoiceFooter:v})} rows={2}/>
-        <FTA label="Receipt Footer Text" value={s.receiptFooter} onChange={v=>editable&&upd({receiptFooter:v})} rows={2}/>
-      </Card>
-      <Card>
-        <div style={{color:'#4a7090',fontSize:'.67rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:'1rem'}}>Live Preview</div>
-        <div style={{background:'#fff',borderRadius:10,padding:'1.1rem',color:'#111',fontFamily:'Georgia,serif'}}>
-          <div style={{display:'flex',justifyContent:'space-between',borderBottom:`2px solid ${s.invoiceColor||'#1565a0'}`,paddingBottom:10,marginBottom:12}}>
-            {s.logo&&s.showLogoOnDocs?<img src={s.logo} style={{height:34,objectFit:'contain'}}/>:<div style={{width:34,height:34,background:s.invoiceColor||'#1565a0',borderRadius:6,display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontWeight:'bold',fontSize:14}}>{(s.clinicName||'A').charAt(0)}</div>}
-            <div style={{textAlign:'right'}}><div style={{fontWeight:'bold',color:s.invoiceColor||'#1565a0',fontSize:13}}>{s.clinicName||'Clinic Name'}</div><div style={{color:'#888',fontSize:11}}>{s.address||'Address'}</div></div>
-          </div>
-          <div style={{display:'flex',justifyContent:'space-between'}}><div><div style={{fontWeight:'bold',fontSize:12,color:s.invoiceColor||'#1565a0'}}>INV-PREVIEW</div><div style={{color:'#888',fontSize:10}}>Date: {today()}</div></div><div style={{textAlign:'right',color:'#888',fontSize:10}}>Patient Name</div></div>
         </div>
-      </Card>
-    </div>}
-    {tab==='sync'&&<div>
-      <Card style={{marginBottom:'1rem'}}>
-        <div style={{display:'flex',gap:'1rem',alignItems:'center',marginBottom:'1.2rem'}}>
-          <div style={{width:46,height:46,background:'linear-gradient(135deg,#0a2a4a,#14508a)',borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Icon n="wifi" s={22}/></div>
-          <div><div style={{color:'#e0f0fc',fontWeight:700,fontSize:'.98rem'}}>Firebase Real-Time Sync</div>
-          <div style={{display:'flex',alignItems:'center',gap:6,marginTop:3,fontSize:'.76rem',color:fbStatus==='online'?'#38c878':fbStatus==='configuring'?'#e8a030':'#4a7090'}}>
-            <div style={{width:7,height:7,borderRadius:'50%',background:fbStatus==='online'?'#38c878':fbStatus==='configuring'?'#e8a030':'#4a7090'}}/>
-            {fbStatus==='online'?'Connected — data syncs in real time across all devices':fbStatus==='configuring'?'Not configured — see instructions below':'Offline — add your Firebase config to enable cloud sync'}
-          </div></div>
+        <div>
+          <div style={{color:'#4a7090',fontSize:'.67rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:7}}>Logo on Documents</div>
+          <label style={{display:'flex',alignItems:'center',gap:'.48rem',cursor:'pointer'}}>
+            <input type="checkbox" checked={!!s.showLogoOnDocs} onChange={e=>editable&&upd({showLogoOnDocs:e.target.checked})}/>
+            <span style={{color:'#e0f0fc',fontSize:'.84rem'}}>Show logo on printed PDFs</span>
+          </label>
         </div>
-        {fbStatus!=='online'&&<div style={{background:'#060c16',border:'1px solid #1e3650',borderRadius:10,padding:'1rem',marginBottom:'1rem'}}>
-          <div style={{color:'#e8a030',fontSize:'.8rem',fontWeight:700,marginBottom:8}}>⚡ How to enable free real-time cloud sync:</div>
-          <div style={{color:'#6a90a8',fontSize:'.8rem',lineHeight:2}}>
-            1. Go to <strong style={{color:'#4a90d9'}}>console.firebase.google.com</strong><br/>
-            2. Click "Add project" → Give it a name (e.g. "ayesha-dental") → Continue<br/>
-            3. Click "Build" → "Realtime Database" → "Create Database" → choose region → "Start in test mode"<br/>
-            4. Click the gear icon → "Project settings" → scroll to "Your apps" → click "Web" (&lt;/&gt;)<br/>
-            5. Register the app → copy the <code style={{color:'#38c878',background:'#0d1a28',padding:'1px 5px',borderRadius:4}}>firebaseConfig</code> object<br/>
-            6. Open this <code style={{color:'#38c878'}}>index.html</code> file in a text editor<br/>
-            7. Find <code style={{color:'#38c878'}}>const FIREBASE_CONFIG</code> near the top and replace the placeholder values<br/>
-            8. Save and re-upload to GitHub Pages — done! All devices will sync in real time.
-          </div>
-        </div>}
-      </Card>
+      </G2>
+      <FTA label="Invoice Footer Text" value={s.invoiceFooter} onChange={v=>editable&&upd({invoiceFooter:v})} rows={2}/>
+      <FTA label="Receipt Footer Text" value={s.receiptFooter} onChange={v=>editable&&upd({receiptFooter:v})} rows={2}/>
+    </Card>}
+    {tab==='backup'&&<div>
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'1rem',marginBottom:'1rem'}}>
-        <Card>
-          <div style={{textAlign:'center',padding:'.5rem'}}>
-            <div style={{color:'#4a90d9',marginBottom:8}}><Icon n="download" s={26}/></div>
-            <div style={{color:'#e0f0fc',fontWeight:700,marginBottom:4}}>Export Backup</div>
-            <div style={{color:'#4a7090',fontSize:'.74rem',marginBottom:'1rem'}}>Download all data as a JSON file</div>
-            <Btn full icon="download" onClick={exportData}>Download Backup</Btn>
-          </div>
-        </Card>
-        <Card>
-          <div style={{textAlign:'center',padding:'.5rem'}}>
-            <div style={{color:'#38c878',marginBottom:8}}><Icon n="upload" s={26}/></div>
-            <div style={{color:'#e0f0fc',fontWeight:700,marginBottom:4}}>Import Data</div>
-            <div style={{color:'#4a7090',fontSize:'.74rem',marginBottom:'1rem'}}>Restore from a previous backup</div>
-            <Btn full success icon="upload" onClick={()=>importRef.current.click()}>Import Backup</Btn>
-            <input ref={importRef} type="file" accept=".json" style={{display:'none'}} onChange={importData}/>
-          </div>
-        </Card>
+        <Card><div style={{textAlign:'center',padding:'.5rem'}}>
+          <div style={{color:'#4a90d9',marginBottom:8}}><Icon n="download" s={26}/></div>
+          <div style={{color:'#e0f0fc',fontWeight:700,marginBottom:4}}>Export Backup</div>
+          <div style={{color:'#4a7090',fontSize:'.74rem',marginBottom:'1rem'}}>Download all data as a JSON file</div>
+          <Btn full icon="download" onClick={exportData}>Download Backup</Btn>
+        </div></Card>
+        <Card><div style={{textAlign:'center',padding:'.5rem'}}>
+          <div style={{color:'#38c878',marginBottom:8}}><Icon n="upload" s={26}/></div>
+          <div style={{color:'#e0f0fc',fontWeight:700,marginBottom:4}}>Import Data</div>
+          <div style={{color:'#4a7090',fontSize:'.74rem',marginBottom:'1rem'}}>Restore from a previous backup</div>
+          <Btn full success icon="upload" onClick={()=>importRef.current.click()}>Import Backup</Btn>
+          <input ref={importRef} type="file" accept=".json" style={{display:'none'}} onChange={importData}/>
+        </div></Card>
       </div>
       <Card>
-        <div style={{color:'#4a7090',fontSize:'.67rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:'1rem'}}>Storage Status</div>
+        <div style={{color:'#4a7090',fontSize:'.67rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:'1rem'}}>Data Summary</div>
         <div className="grid-3" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'.65rem'}}>
-          {[['Patients',db.patients?.length||0],['Invoices',db.invoices?.length||0],['Appointments',db.appointments?.length||0],['Receipts',db.receipts?.length||0],['Bills',db.bills?.length||0],['Expenses',db.expenses?.length||0]].map(([k,v])=>(
+          {[['Patients',(db.patients||[]).length],['Invoices',(db.invoices||[]).length],['Appointments',(db.appointments||[]).length],['Receipts',(db.receipts||[]).length],['Bills',(db.bills||[]).length],['Expenses',(db.expenses||[]).length]].map(([k,v])=>(
             <div key={k} style={{background:'#060c16',borderRadius:8,padding:'.55rem .75rem'}}><div style={{color:'#2e4a60',fontSize:'.64rem',textTransform:'uppercase',marginBottom:2}}>{k}</div><div style={{color:'#e0f0fc',fontWeight:700}}>{v}</div></div>
           ))}
         </div>
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:'1rem'}}>
-          <div style={{color:'#2e4a60',fontSize:'.74rem'}}>Data stored in: {fbStatus==='online'?'Firebase Cloud + localStorage':'localStorage (this browser only)'}</div>
-          {editable&&<Btn sm ghost danger onClick={()=>{if(window.confirm('RESET ALL DATA? Cannot be undone.'))setDb({...SEED,_ts:Date.now()});}}>Reset All Data</Btn>}
-        </div>
+        {editable&&<div style={{marginTop:'1rem',textAlign:'right'}}><Btn sm ghost danger onClick={()=>{if(window.confirm('RESET ALL DATA? This will delete everything from Firebase. Cannot be undone.'))setDb({...SEED,_ts:Date.now()});}}>Reset All Data</Btn></div>}
       </Card>
     </div>}
   </div>);
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ROOT APP
+// ROOT APP — Firebase-first, no localStorage
 // ═══════════════════════════════════════════════════════════════════════════════
 function App(){
-  const[db,setDbRaw]=useState(()=>{try{const s=localStorage.getItem(LSKEY);return s?JSON.parse(s):SEED;}catch{return SEED;}});
+  // null = loading, object = loaded
+  const[db,setDbRaw]=useState(null);
   const[currentUser,setCurrentUser]=useState(null);
   const[active,setActive]=useState('dashboard');
   const[syncing,setSyncing]=useState(false);
-  const[fbStatus,setFbStatus]=useState('connecting');
-  const syncTimerRef=useRef(null);
-  const isRemoteUpdate=useRef(false);
+  const[loadStatus,setLoadStatus]=useState('Connecting to Firebase…');
+  const[mobOpen,setMobOpen]=useState(false);
 
-  // Wrap setDb to add timestamp and handle sync
+  // Track writes we triggered ourselves so we don't re-apply them as "remote"
+  const pendingWrite=useRef(false);
+  const saveTimer=useRef(null);
+  const unsubRef=useRef(null);
+
+  // ── On mount: load from Firebase, then subscribe ────────────────────────
+  useEffect(()=>{
+    let mounted=true;
+    (async()=>{
+      // Give the module script time to attach window.__fb
+      await new Promise(r=>setTimeout(r,600));
+      if(!window.__fb?.enabled){
+        setLoadStatus('Firebase not available. Check your connection.');
+        return;
+      }
+      try{
+        setLoadStatus('Loading clinic data…');
+        let data=await window.__fb.load();
+        if(!data){
+          setLoadStatus('Setting up clinic for first time…');
+          data={...SEED,_ts:Date.now()};
+          await window.__fb.save(data);
+        }
+        if(!mounted)return;
+        const safe=safeDb(data);
+        setDbRaw(safe);
+        setLoadStatus('');
+
+        // Subscribe to real-time updates from OTHER devices/tabs
+        unsubRef.current=window.__fb.subscribe(incoming=>{
+          if(pendingWrite.current)return; // ignore echo of our own write
+          const cleaned=safeDb(incoming);
+          setDbRaw(prev=>{
+            if(!prev||(incoming._ts||0)>(prev._ts||0))return cleaned;
+            return prev;
+          });
+        });
+      }catch(e){
+        console.error('Firebase load failed:',e);
+        if(mounted)setLoadStatus('Failed to load data. Check Firebase rules and internet connection.');
+      }
+    })();
+    return()=>{mounted=false;if(unsubRef.current)unsubRef.current();};
+  },[]);
+
+  // ── setDb: update state and save to Firebase ─────────────────────────────
   const setDb=useCallback(updFn=>{
     setDbRaw(prev=>{
+      if(!prev)return prev;
       const next=typeof updFn==='function'?updFn(prev):updFn;
       const stamped={...next,_ts:Date.now()};
-      localStorage.setItem(LSKEY,JSON.stringify(stamped));
-      if(!isRemoteUpdate.current){
-        if(syncTimerRef.current)clearTimeout(syncTimerRef.current);
-        syncTimerRef.current=setTimeout(async()=>{
-          setSyncing(true);
-          await window.__fb?.save(stamped);
-          setSyncing(false);
-        },800);
-      }
+      // Debounced save to Firebase
+      if(saveTimer.current)clearTimeout(saveTimer.current);
+      pendingWrite.current=true;
+      setSyncing(true);
+      saveTimer.current=setTimeout(async()=>{
+        await window.__fb?.save(stamped);
+        setSyncing(false);
+        // Allow a brief window then re-enable incoming updates
+        setTimeout(()=>{pendingWrite.current=false;},500);
+      },600);
       return stamped;
     });
   },[]);
 
-  useEffect(()=>{
-    const init=async()=>{
-      await new Promise(r=>setTimeout(r,500));
-      if(!window.__fb?.enabled){setFbStatus('offline');return;}
-      try{
-        const remote=await window.__fb.load();
-        if(remote){
-          const localTs=db._ts||0;const remoteTs=remote._ts||0;
-          if(remoteTs>localTs){
-            isRemoteUpdate.current=true;
-            setDbRaw(remote);
-            localStorage.setItem(LSKEY,JSON.stringify(remote));
-            isRemoteUpdate.current=false;
-            showToast('☁ Data loaded from Firebase!');
-          }
-        } else {
-          await window.__fb.save(db);
-          showToast('☁ Initial data pushed to Firebase!');
-        }
-        setFbStatus('online');
-        window.__fb.subscribe(data=>{
-          isRemoteUpdate.current=true;
-          setDbRaw(prev=>{
-            if((data._ts||0)>(prev._ts||0)){
-              localStorage.setItem(LSKEY,JSON.stringify(data));
-              return data;
-            }
-            return prev;
-          });
-          setTimeout(()=>{isRemoteUpdate.current=false;},100);
-        });
-      }catch(e){
-        console.error('Firebase connection error:',e);
-        setFbStatus('offline');
-        showToast('Firebase error — running offline',true);
-      }
-    };
-    init();
-  },[]);
+  const can=useCallback(perm=>{
+    if(!currentUser||!db)return false;
+    const rp=db.rolePermissions||DEFAULT_PERMS;
+    return(rp[currentUser.role]||[]).includes(perm);
+  },[currentUser,db]);
 
-  const[mobOpen,setMobOpen]=useState(false);
   const closeMob=()=>setMobOpen(false);
   const navTo=k=>{setActive(k);closeMob();};
 
-  const can=useCallback(perm=>{
-    if(!currentUser)return false;
-    const rp=db.rolePermissions||DEFAULT_PERMS;
-    return(rp[currentUser.role]||[]).includes(perm);
-  },[currentUser,db.rolePermissions]);
+  // ── Still loading ────────────────────────────────────────────────────────
+  if(!db) return <LoadingScreen status={loadStatus}/>;
 
-  if(!currentUser) return <LoginScreen db={db} onLogin={setCurrentUser} fbStatus={fbStatus}/>;
+  // ── Login ────────────────────────────────────────────────────────────────
+  if(!currentUser) return <LoginScreen db={db} onLogin={setCurrentUser} fbStatus="online"/>;
 
   const allNav=[
     {k:'dashboard',label:'Dashboard',icon:'dash',perm:'view_dashboard'},
@@ -1717,24 +1370,37 @@ function App(){
   const rp=db.rolePermissions||DEFAULT_PERMS;
   const nav=allNav.filter(n=>n===null||(rp[currentUser.role]||[]).includes(n.perm));
   const roleColors={admin:'#e8a030',doctor:'#4a90d9',accountant:'#38c878',receptionist:'#c084fc'};
-  const pages={dashboard:<Dashboard db={db}/>,patients:<Patients db={db} setDb={setDb} can={can}/>,appointments:<Appointments db={db} setDb={setDb} can={can}/>,history:<History db={db} setDb={setDb} can={can}/>,prescriptions:<Prescriptions db={db} setDb={setDb} can={can}/>,invoices:<Invoices db={db} setDb={setDb} can={can}/>,receipts:<Receipts db={db} setDb={setDb} can={can}/>,bills:<Bills db={db} setDb={setDb} can={can}/>,expenses:<Expenses db={db} setDb={setDb} can={can}/>,reports:<Reports db={db}/>,doctors:<Doctors db={db} setDb={setDb} can={can}/>,suppliers:<Suppliers db={db} setDb={setDb} can={can}/>,users:<UsersPage db={db} setDb={setDb} currentUser={currentUser}/>,settings:<Settings db={db} setDb={setDb} can={can} fbStatus={fbStatus}/>};
-
-  // Bottom nav items (5 most important, rest in drawer)
+  const pages={
+    dashboard:<Dashboard db={db}/>,
+    patients:<Patients db={db} setDb={setDb} can={can}/>,
+    appointments:<Appointments db={db} setDb={setDb} can={can}/>,
+    history:<History db={db} setDb={setDb} can={can}/>,
+    prescriptions:<Prescriptions db={db} setDb={setDb} can={can}/>,
+    invoices:<Invoices db={db} setDb={setDb} can={can}/>,
+    receipts:<Receipts db={db} setDb={setDb} can={can}/>,
+    bills:<Bills db={db} setDb={setDb} can={can}/>,
+    expenses:<Expenses db={db} setDb={setDb} can={can}/>,
+    reports:<Reports db={db}/>,
+    doctors:<Doctors db={db} setDb={setDb} can={can}/>,
+    suppliers:<Suppliers db={db} setDb={setDb} can={can}/>,
+    users:<UsersPage db={db} setDb={setDb} currentUser={currentUser}/>,
+    settings:<Settings db={db} setDb={setDb} can={can}/>,
+  };
   const bnav=nav.filter(n=>n&&['dashboard','patients','appointments','invoices','reports'].includes(n.k)).slice(0,4);
 
-  // Sidebar inner shared between desktop and mobile drawer
-  const SidebarInner=()=>(
+  const SidebarContent=({mobile=false})=>(
     <>
-      <div style={{padding:'1.05rem .88rem .85rem',borderBottom:'1px solid #1e3650'}}>
+      <div style={{padding:'1.05rem .88rem .85rem',borderBottom:'1px solid #1e3650',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
         <div style={{display:'flex',alignItems:'center',gap:'.6rem'}}>
-            {db.settings?.logo?<img src={db.settings.logo} style={{width:32,height:32,borderRadius:8,objectFit:'contain',background:'#14508a',padding:2,flexShrink:0}}/>:
-              <div style={{width:32,height:32,background:'linear-gradient(135deg,#14508a,#0c3060)',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Icon n="tooth" s={17}/></div>}
-            <div><div style={{color:'#e0f0fc',fontFamily:"'Cormorant Garamond',serif",fontSize:'.87rem',fontWeight:700,lineHeight:1.1}}>{db.settings?.clinicName||'Dental Clinic'}</div><div style={{color:'#2e4a60',fontSize:'.57rem',marginTop:1}}>Management System</div></div>
+          {db.settings?.logo?<img src={db.settings.logo} style={{width:32,height:32,borderRadius:8,objectFit:'contain',background:'#14508a',padding:2,flexShrink:0}}/>:
+            <div style={{width:32,height:32,background:'linear-gradient(135deg,#14508a,#0c3060)',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Icon n="tooth" s={17}/></div>}
+          <div><div style={{color:'#e0f0fc',fontFamily:"'Cormorant Garamond',serif",fontSize:'.87rem',fontWeight:700,lineHeight:1.1}}>{db.settings?.clinicName||'Dental Clinic'}</div><div style={{color:'#2e4a60',fontSize:'.57rem',marginTop:1}}>Management System</div></div>
         </div>
+        {mobile&&<button onClick={closeMob} style={{background:'none',border:'none',color:'#4a7090',cursor:'pointer',padding:4}}><Icon n="close" s={18}/></button>}
       </div>
-      <div style={{display:'flex',alignItems:'center',gap:6,padding:'.42rem .88rem',background:'#060c16',borderBottom:'1px solid #1e3650',fontSize:'.66rem',color:fbStatus==='online'?'#38c878':'#4a7090'}}>
-        <Icon n={syncing?'sync':fbStatus==='online'?'wifi':'wifioff'} s={11} className={syncing?'syncing':''}/>
-        {syncing?'Syncing…':fbStatus==='online'?'Cloud sync on':'Local only'}
+      <div style={{display:'flex',alignItems:'center',gap:6,padding:'.42rem .88rem',background:'#060c16',borderBottom:'1px solid #1e3650',fontSize:'.66rem',color:syncing?'#e8a030':'#38c878'}}>
+        <Icon n={syncing?'sync':'wifi'} s={11} className={syncing?'syncing':''}/>
+        {syncing?'Saving…':'☁ Firebase Live'}
       </div>
       <nav style={{flex:1,padding:'.6rem .52rem',overflowY:'auto'}}>
         {nav.map((n,i)=>n===null?<div key={i} style={{height:1,background:'#1e3650',margin:'.32rem 0'}}/>:(
@@ -1748,10 +1414,10 @@ function App(){
       </nav>
       <div style={{padding:'.62rem .72rem',borderTop:'1px solid #1e3650'}}>
         <div style={{display:'flex',alignItems:'center',gap:'.52rem',marginBottom:'.52rem'}}>
-          <div style={{width:28,height:28,borderRadius:'50%',background:`linear-gradient(135deg,${roleColors[currentUser.role]}44,${roleColors[currentUser.role]}22)`,border:`1.5px solid ${roleColors[currentUser.role]}55`,display:'flex',alignItems:'center',justifyContent:'center',color:roleColors[currentUser.role],fontWeight:700,fontSize:'.88rem',flexShrink:0}}>{currentUser.name.charAt(0)}</div>
+          <div style={{width:28,height:28,borderRadius:'50%',background:`linear-gradient(135deg,${roleColors[currentUser.role]||'#4a7090'}44,${roleColors[currentUser.role]||'#4a7090'}22)`,border:`1.5px solid ${roleColors[currentUser.role]||'#4a7090'}55`,display:'flex',alignItems:'center',justifyContent:'center',color:roleColors[currentUser.role]||'#4a7090',fontWeight:700,fontSize:'.88rem',flexShrink:0}}>{currentUser.name.charAt(0)}</div>
           <div style={{overflow:'hidden',flex:1}}>
             <div style={{color:'#e0f0fc',fontSize:'.74rem',fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{currentUser.name.split(' ')[0]}</div>
-            <div style={{color:roleColors[currentUser.role],fontSize:'.6rem',textTransform:'capitalize'}}>{currentUser.role}</div>
+            <div style={{color:roleColors[currentUser.role]||'#4a7090',fontSize:'.6rem',textTransform:'capitalize'}}>{currentUser.role}</div>
           </div>
         </div>
         <button onClick={()=>setCurrentUser(null)} style={{width:'100%',background:'transparent',border:'1px solid #1e3650',borderRadius:7,padding:'.38rem',color:'#4a7090',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:5,fontSize:'.72rem'}}>
@@ -1761,153 +1427,40 @@ function App(){
     </>
   );
 
-  return(<div style={{display:'flex',minHeight:'100vh',background:'#040b13',fontFamily:"'DM Sans',sans-serif",color:'#e0f0fc'}}>
-
-    {/* ── DESKTOP SIDEBAR (hidden on mobile via CSS) ── */}
+  return(<div style={{display:'flex',minHeight:'100vh',background:'#040b13'}}>
     <aside className="sidebar-desktop" style={{width:210,background:'#070f1a',borderRight:'1px solid #1e3650',display:'flex',flexDirection:'column',flexShrink:0,position:'sticky',top:0,height:'100vh',overflowY:'auto'}}>
-      <SidebarInner/>
+      <SidebarContent/>
     </aside>
-
-    {/* ── MOBILE OVERLAY ── */}
     <div className={'mob-overlay'+(mobOpen?' open':'')} onClick={closeMob}/>
-
-    {/* ── MOBILE DRAWER SIDEBAR ── */}
     <aside className={'sidebar-mobile'+(mobOpen?' open':'')}>
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'1rem .88rem .85rem',borderBottom:'1px solid #1e3650'}}>
-        <div style={{display:'flex',alignItems:'center',gap:'.6rem'}}>
-          {db.settings?.logo?<img src={db.settings.logo} style={{width:30,height:30,borderRadius:7,objectFit:'contain',background:'#14508a',padding:2,flexShrink:0}}/>:
-            <div style={{width:30,height:30,background:'linear-gradient(135deg,#14508a,#0c3060)',borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Icon n="tooth" s={16}/></div>}
-          <div><div style={{color:'#e0f0fc',fontFamily:"'Cormorant Garamond',serif",fontSize:'.85rem',fontWeight:700,lineHeight:1.1}}>{db.settings?.clinicName||'Dental Clinic'}</div><div style={{color:'#2e4a60',fontSize:'.56rem',marginTop:1}}>Management System</div></div>
-        </div>
-        <button onClick={closeMob} style={{background:'none',border:'none',color:'#4a7090',cursor:'pointer',padding:4}}><Icon n="close" s={18}/></button>
-      </div>
-      <div style={{display:'flex',alignItems:'center',gap:6,padding:'.4rem .88rem',background:'#060c16',borderBottom:'1px solid #1e3650',fontSize:'.65rem',color:fbStatus==='online'?'#38c878':'#4a7090'}}>
-        <Icon n={syncing?'sync':fbStatus==='online'?'wifi':'wifioff'} s={11} className={syncing?'syncing':''}/>
-        {syncing?'Syncing…':fbStatus==='online'?'Cloud sync on':'Local only'}
-      </div>
-      <nav style={{flex:1,padding:'.6rem .5rem',overflowY:'auto'}}>
-        {nav.map((n,i)=>n===null?<div key={i} style={{height:1,background:'#1e3650',margin:'.3rem 0'}}/>:(
-          <button key={n.k} onClick={()=>navTo(n.k)}
-            style={{width:'100%',display:'flex',alignItems:'center',gap:'.55rem',padding:'.52rem .72rem',borderRadius:8,border:'none',background:active===n.k?'#14508a':'transparent',color:active===n.k?'#fff':'#4a7090',cursor:'pointer',fontSize:'.82rem',fontWeight:active===n.k?700:400,marginBottom:2,textAlign:'left',minHeight:42}}>
-            <Icon n={n.icon} s={15}/>{n.label}
-          </button>
-        ))}
-      </nav>
-      <div style={{padding:'.6rem .7rem',borderTop:'1px solid #1e3650'}}>
-        <div style={{display:'flex',alignItems:'center',gap:'.5rem',marginBottom:'.5rem'}}>
-          <div style={{width:30,height:30,borderRadius:'50%',background:`linear-gradient(135deg,${roleColors[currentUser.role]}44,${roleColors[currentUser.role]}22)`,border:`1.5px solid ${roleColors[currentUser.role]}55`,display:'flex',alignItems:'center',justifyContent:'center',color:roleColors[currentUser.role],fontWeight:700,fontSize:'.9rem',flexShrink:0}}>{currentUser.name.charAt(0)}</div>
-          <div style={{overflow:'hidden',flex:1}}>
-            <div style={{color:'#e0f0fc',fontSize:'.78rem',fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{currentUser.name}</div>
-            <div style={{color:roleColors[currentUser.role],fontSize:'.63rem',textTransform:'capitalize'}}>{currentUser.role}</div>
-          </div>
-        </div>
-        <button onClick={()=>setCurrentUser(null)} style={{width:'100%',background:'transparent',border:'1px solid #1e3650',borderRadius:7,padding:'.4rem',color:'#4a7090',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:5,fontSize:'.74rem'}}>
-          <Icon n="logout" s={12}/>Sign Out
-        </button>
-      </div>
+      <SidebarContent mobile/>
     </aside>
-
-    {/* ── RIGHT COLUMN: header + main + bottom nav ── */}
-    <div style={{display:'flex',flexDirection:'column',flex:1,minWidth:0,minHeight:'100vh'}}>
-
-      {/* Mobile top header — hidden on desktop via CSS */}
-      <div className="mob-header">
-        <button onClick={()=>setMobOpen(true)} style={{background:'none',border:'none',color:'#e0f0fc',cursor:'pointer',padding:4,display:'flex',alignItems:'center'}}><Icon n="menu" s={22}/></button>
-        <span style={{fontFamily:"'Cormorant Garamond',serif",color:'#e0f0fc',fontSize:'1.05rem',fontWeight:700}}>{db.settings?.clinicName||'Dental Clinic'}</span>
-        <div style={{width:28,display:'flex',alignItems:'center',justifyContent:'flex-end',color:fbStatus==='online'?'#38c878':'#4a7090'}}>
-          <Icon n={fbStatus==='online'?'wifi':'wifioff'} s={14}/>
-        </div>
+    <div className="mob-header">
+      <button onClick={()=>setMobOpen(true)} style={{background:'none',border:'none',color:'#e0f0fc',cursor:'pointer',padding:4,display:'flex'}}><Icon n="menu" s={22}/></button>
+      <span style={{fontFamily:"'Cormorant Garamond',serif",color:'#e0f0fc',fontSize:'1.05rem',fontWeight:700}}>{db.settings?.clinicName||'Dental Clinic'}</span>
+      <div style={{color:syncing?'#e8a030':'#38c878',display:'flex',alignItems:'center',gap:4,fontSize:'.7rem'}}>
+        <Icon n={syncing?'sync':'wifi'} s={13} className={syncing?'syncing':''}/>
       </div>
-
-      {/* Main content */}
-      <main className="main-content" style={{flex:1,padding:'1.5rem 1.7rem',overflowY:'auto',maxHeight:'100vh'}}>
-        {pages[active]||<div style={{color:'#2e4a60',textAlign:'center',padding:'4rem'}}>Select a section from the sidebar.</div>}
-      </main>
-
-      {/* Mobile bottom nav — hidden on desktop via CSS */}
-      <nav className="bottom-nav">
-        {bnav.map(n=>(
-          <button key={n.k} className={'bottom-nav-item'+(active===n.k?' active':'')} onClick={()=>navTo(n.k)}>
-            <Icon n={n.icon} s={20}/>
-            <span>{n.label}</span>
-          </button>
-        ))}
-        <button className="bnav-more" onClick={()=>setMobOpen(true)}>
-          <Icon n="menu" s={20}/>
-          <span style={{fontSize:'.6rem',fontWeight:600}}>More</span>
-        </button>
-      </nav>
-
     </div>
-
+    <div style={{display:'flex',flexDirection:'column',flex:1,minWidth:0,minHeight:'100vh'}}>
+      <main className="main-content" style={{flex:1,padding:'1.5rem 1.7rem',overflowY:'auto',maxHeight:'100vh'}}>
+        {pages[active]||<div style={{color:'#2e4a60',textAlign:'center',padding:'4rem'}}>Select a section.</div>}
+      </main>
+    </div>
+    <nav className="bottom-nav">
+      {bnav.map(n=>(
+        <button key={n.k} className={'bottom-nav-item'+(active===n.k?' active':'')} onClick={()=>navTo(n.k)}>
+          <Icon n={n.icon} s={20}/><span>{n.label}</span>
+        </button>
+      ))}
+      <button className="bnav-more" onClick={()=>setMobOpen(true)}>
+        <Icon n="menu" s={20}/><span style={{fontSize:'.6rem',fontWeight:600}}>More</span>
+      </button>
+    </nav>
   </div>);
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 </script>
-
-<!-- ═══════════════════════════════════════════════════════════════════════════
-  GITHUB PAGES DEPLOYMENT GUIDE
-  (This comment is not shown to users — it's your reference)
-
-  ═══════════════════════════════════════════════════════════════════════════
-  STEP 1 — Create a GitHub account (free)
-    → Go to github.com and sign up
-
-  STEP 2 — Create a new repository
-    → Click "New" (green button)
-    → Name it: ayesha-dental (or anything)
-    → Set to Public
-    → Click "Create repository"
-
-  STEP 3 — Upload this file
-    → Click "uploading an existing file"
-    → Drag & drop this index.html file
-    → Scroll down → click "Commit changes"
-
-  STEP 4 — Enable GitHub Pages
-    → Go to Settings (tab at top of your repo)
-    → Click "Pages" in the left sidebar
-    → Under "Source" select "Deploy from a branch"
-    → Branch: main, Folder: / (root)
-    → Click Save
-    → Wait ~2 minutes
-
-  STEP 5 — Get your URL
-    → Refresh the Pages settings page
-    → You'll see: "Your site is live at https://YOUR-USERNAME.github.io/ayesha-dental"
-    → Open this URL on any device — it will work!
-
-  ═══════════════════════════════════════════════════════════════════════════
-  OPTIONAL: Add Firebase for real-time multi-device sync
-
-  STEP A — Create free Firebase project
-    → Go to console.firebase.google.com
-    → "Add project" → name it "ayesha-dental" → Continue → Continue → Create project
-
-  STEP B — Add Realtime Database
-    → In Firebase console, click "Build" in left sidebar → "Realtime Database"
-    → Click "Create Database" → choose closest region → "Start in test mode" → Enable
-
-  STEP C — Get your config
-    → Click gear icon (top left) → "Project settings"
-    → Scroll to "Your apps" → click Web icon (</>)
-    → App nickname: "dental-app" → click "Register app"
-    → Copy the firebaseConfig object shown
-
-  STEP D — Update this file
-    → Open index.html in Notepad (Windows) or TextEdit (Mac)
-    → Find: const FIREBASE_CONFIG = {
-    → Replace the placeholder values with your real values from Step C
-
-  STEP E — Re-upload to GitHub
-    → In your GitHub repo, click index.html → click pencil (edit) icon
-    → Paste your updated content → click "Commit changes"
-    → Done! All devices will now sync in real time.
-
-  WITHOUT FIREBASE: The app still works perfectly on any device via GitHub
-  Pages — each device just has its own local data. Use the Export/Import
-  buttons in Settings → Multi-Device Sync to manually transfer data.
-═══════════════════════════════════════════════════════════════════════════ -->
 </body>
 </html>
