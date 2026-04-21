@@ -279,6 +279,251 @@ const FTA=({label,value,onChange,rows=3})=>(
   </div>
 );
 const Card=({children,style:sx,onClick})=>(
+  <div onClick={onClick} style={{background:'#090f1a',border:'1px solid #1e3650',borderRadius:14,padding:'.95rem 1.15rem',cursor:onClick?'poi    try {
+      const snap = await get(ref(fbdb, FB_PATH));
+      return snap.exists() ? snap.val() : null;
+    } catch(e) { console.error("FB load error:", e); return null; }
+  },
+  async save(data) {
+    try { await set(ref(fbdb, FB_PATH), data); }
+    catch(e) { console.error("FB save error:", e); }
+  },
+  subscribe(cb) {
+    return onValue(ref(fbdb, FB_PATH), snap => {
+      if(snap.exists()) cb(snap.val());
+    }, e => console.error("FB sub error:", e));
+  }
+};
+</script>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#040b13;font-family:'DM Sans',sans-serif;color:#e0f0fc}
+input,select,textarea,button{font-family:'DM Sans',sans-serif}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:#040b13}
+::-webkit-scrollbar-thumb{background:#1e3650;border-radius:4px}
+select option{background:#0b1520}
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+input[type=color]{padding:0;border:none;border-radius:6px;cursor:pointer}
+
+/* ── ROOT & APP SHELL ── */
+#root{height:100%;display:flex;flex-direction:column}
+.app-shell{display:flex;min-height:100vh;width:100%;background:#040b13}
+
+/* ── DESKTOP SIDEBAR ── */
+.sidebar-desktop{
+  width:210px;min-width:210px;background:#070f1a;border-right:1px solid #1e3650;
+  display:flex;flex-direction:column;flex-shrink:0;
+  position:sticky;top:0;height:100vh;overflow-y:auto;
+  transition:width .22s cubic-bezier(.4,0,.2,1),min-width .22s cubic-bezier(.4,0,.2,1),opacity .18s
+}
+
+/* ── MAIN COLUMN (fills all remaining space) ── */
+.main-col{display:flex;flex-direction:column;flex:1;min-width:0;min-height:100vh}
+.main-content{flex:1;padding:1.5rem 1.7rem;overflow-y:auto}
+
+/* ── PRINT ── */
+#print-frame{position:fixed;left:-9999px;top:-9999px;width:800px;height:600px;border:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.syncing{animation:spin .8s linear infinite}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:1.5rem;right:1rem;z-index:9999;display:flex;flex-direction:column;gap:.4rem;pointer-events:none}
+.toast-item{background:#0d3a22;border:1px solid #38c878;color:#38c878;padding:.55rem 1rem;border-radius:10px;font-size:.8rem;font-weight:600;transition:opacity .3s;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+.toast-item.err{background:#3a0d0d;border-color:#d95050;color:#d95050}
+input[type=checkbox]{accent-color:#14508a;width:15px;height:15px;cursor:pointer}
+@media print{body{background:#fff!important;color:#111!important}.no-print{display:none!important}}
+
+/* ── MOBILE DRAWER ── */
+.sidebar-mobile{
+  display:none;position:fixed;left:0;top:0;bottom:0;width:240px;z-index:300;
+  background:#070f1a;border-right:1px solid #1e3650;
+  flex-direction:column;height:100vh;overflow-y:auto;
+  transform:translateX(-100%);transition:transform .22s cubic-bezier(.4,0,.2,1)
+}
+.sidebar-mobile.open{transform:translateX(0)}
+.mob-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;opacity:0;transition:opacity .22s;pointer-events:none}
+.mob-overlay.open{opacity:1;pointer-events:auto}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:150;background:#070f1a;border-top:1px solid #1e3650;padding:0;height:58px;align-items:stretch}
+.bottom-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:none;color:#4a7090;cursor:pointer;font-size:.6rem;font-weight:600;padding:4px 2px;transition:color .15s;-webkit-tap-highlight-color:transparent}
+.bottom-nav-item.active{color:#4a90d9}
+.bnav-more{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:none;color:#4a7090;cursor:pointer;font-size:.6rem;font-weight:600;padding:4px 2px;-webkit-tap-highlight-color:transparent}
+
+/* ── MOBILE HEADER ── */
+.mob-header{display:none;align-items:center;justify-content:space-between;padding:.7rem 1rem;background:#070f1a;border-bottom:1px solid #1e3650;position:sticky;top:0;z-index:100;height:52px;flex-shrink:0}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .mob-header{display:flex}
+  .bottom-nav{display:flex}
+  .mob-overlay{display:block}
+  .sidebar-mobile{display:flex}
+  .sidebar-desktop{display:none!important}
+  #toast{bottom:70px}
+  .main-content{padding:.9rem .9rem 72px!important}
+  .grid-4{grid-template-columns:1fr 1fr!important}
+  .grid-3{grid-template-columns:1fr 1fr!important}
+  .grid-2{grid-template-columns:1fr!important}
+  .grid-chart{grid-template-columns:1fr!important}
+  .hide-mobile{display:none!important}
+  .modal-box{max-width:100%!important;max-height:100vh!important;border-radius:18px 18px 0 0!important;margin-top:auto}
+  .modal-wrap{align-items:flex-end!important;padding:0!important}
+  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+}
+@media(max-width:400px){.grid-4{grid-template-columns:1fr 1fr!important}.bottom-nav-item{font-size:.55rem}}
+button,a{-webkit-tap-highlight-color:transparent}
+input,select,textarea{font-size:16px!important}
+@media(min-width:769px){input,select,textarea{font-size:.86rem!important}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<iframe id="print-frame"></iframe>
+<div id="toast"></div>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script type="text/babel" data-presets="react">
+const {useState,useEffect,useRef,useCallback}=React;
+
+// ─── HELPERS ───────────────────────────────────────────────────────────────
+function showToast(msg,isErr=false){
+  const el=document.createElement('div');
+  el.className='toast-item'+(isErr?' err':'');
+  el.textContent=msg;
+  document.getElementById('toast').appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';setTimeout(()=>el.remove(),400)},3000);
+}
+const today=()=>new Date().toISOString().split('T')[0];
+const uid=p=>`${p}-${Date.now().toString(36).toUpperCase().slice(-5)}`;
+const fmtPKR=n=>`Rs. ${Number(n||0).toLocaleString('en-PK')}`;
+const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// ─── SAFE DB: ensures all arrays exist even if Firebase returns partial data ─
+function safeDb(raw){
+  if(!raw) return null;
+  return {
+    ...raw,
+    _ts: raw._ts||Date.now(),
+    settings: raw.settings||{},
+    rolePermissions: raw.rolePermissions||DEFAULT_PERMS,
+    users:         Array.isArray(raw.users)?raw.users:[],
+    patients:      Array.isArray(raw.patients)?raw.patients:[],
+    appointments:  Array.isArray(raw.appointments)?raw.appointments:[],
+    history:       Array.isArray(raw.history)?raw.history:[],
+    prescriptions: Array.isArray(raw.prescriptions)?raw.prescriptions:[],
+    invoices:      Array.isArray(raw.invoices)?raw.invoices:[],
+    receipts:      Array.isArray(raw.receipts)?raw.receipts:[],
+    bills:         Array.isArray(raw.bills)?raw.bills:[],
+    expenses:      Array.isArray(raw.expenses)?raw.expenses:[],
+    doctors:       Array.isArray(raw.doctors)?raw.doctors:[],
+    suppliers:     Array.isArray(raw.suppliers)?raw.suppliers:[],
+  };
+}
+
+// ─── PERMISSIONS ────────────────────────────────────────────────────────────
+const ALL_PERMS=['view_dashboard','view_patients','edit_patients','view_appointments','edit_appointments','view_history','edit_history','view_prescriptions','edit_prescriptions','view_invoices','edit_invoices','pay_invoices','view_receipts','edit_receipts','view_bills','edit_bills','pay_bills','view_expenses','edit_expenses','view_reports','view_doctors','edit_doctors','view_suppliers','edit_suppliers','view_users','edit_users','view_settings','edit_settings'];
+const DEFAULT_PERMS={
+  admin:ALL_PERMS,
+  doctor:['view_dashboard','view_patients','edit_patients','view_appointments','edit_appointments','view_history','edit_history','view_prescriptions','edit_prescriptions','view_invoices'],
+  accountant:['view_dashboard','view_invoices','edit_invoices','pay_invoices','view_receipts','edit_receipts','view_bills','edit_bills','pay_bills','view_expenses','edit_expenses','view_reports','view_suppliers'],
+  receptionist:['view_dashboard','view_patients','edit_patients','view_appointments','edit_appointments'],
+};
+
+// ─── INITIAL SEED (only pushed to Firebase if database is empty) ─────────────
+const SEED={
+  _ts:Date.now(),
+  settings:{clinicName:'Ayesha Dental Clinic',tagline:'Your Smile, Our Priority',phone:'0311-1579491',email:'Ayeshasdental@gmail.com',address:'Shop # 4, Iftikhar Arcade, Ghouri Town Main Road, Ghouri Town, Islamabad',logo:null,invoiceLayout:'classic',receiptLayout:'classic',invoiceColor:'#1565a0',invoiceFooter:'Thank you for choosing Ayesha Dental Clinic.',receiptFooter:'Payment received. Thank you!',currency:'Rs.',taxLabel:'GST',showLogoOnDocs:true},
+  rolePermissions:DEFAULT_PERMS,
+  users:[{id:1,name:'Dr. Ayesha Hassan',email:'ayesha@clinic.com',password:'admin123',role:'admin',active:true}],
+  patients:[],appointments:[],history:[],prescriptions:[],invoices:[],receipts:[],bills:[],expenses:[],
+  doctors:[{id:1,name:'Dr. Ayesha Hassan',specialization:'BDS',phone:'0311-1579491',email:'ayesha@clinic.com',fee:1000,active:true}],
+  suppliers:[],
+};
+
+// ─── ICONS ──────────────────────────────────────────────────────────────────
+const IC={
+  dash:<><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></>,
+  patients:<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></>,
+  calendar:<><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></>,
+  history:<><polyline points="12 8 12 12 14 14"/><path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"/></>,
+  rx:<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></>,
+  invoice:<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></>,
+  receipt:<><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></>,
+  bill:<><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></>,
+  expense:<><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></>,
+  reports:<><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></>,
+  doctors:<><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></>,
+  suppliers:<><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></>,
+  users:<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></>,
+  settings:<><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></>,
+  plus:<><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>,
+  search:<><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>,
+  close:<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>,
+  edit:<><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></>,
+  trash:<><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4h6v2"/></>,
+  print:<><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></>,
+  logout:<><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></>,
+  tooth:<path d="M12 2C8.5 2 5 4.5 5 8c0 2.5 1 4.5 1.5 7S8 22 10 22c1.5 0 2-2 2-2s.5 2 2 2c2 0 3-5 3.5-7S19 10.5 19 8c0-3.5-3.5-6-7-6z"/>,
+  menu:<><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></>,
+  wifi:<><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></>,
+  wifioff:<><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.56 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></>,
+  check:<><polyline points="20 6 9 17 4 12"/></>,
+  alert:<><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></>,
+  camera:<><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></>,
+  pay:<><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></>,
+  shield:<><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></>,
+  sync:<><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></>,
+  download:<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></>,
+  upload:<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></>,
+};
+const Icon=({n,s=16})=><svg width={s} height={s} fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">{IC[n]}</svg>;
+
+// ─── SHARED COMPONENTS ──────────────────────────────────────────────────────
+const Modal=({title,onClose,children,wide})=>(
+  <div className="modal-wrap" style={{position:'fixed',inset:0,background:'rgba(0,0,0,.7)',zIndex:3000,display:'flex',alignItems:'flex-start',justifyContent:'center',padding:'1.5rem 1rem',overflowY:'auto'}}>
+    <div className="modal-box" style={{background:'#0b1520',border:'1px solid #1e3650',borderRadius:18,width:'100%',maxWidth:wide?700:580,boxShadow:'0 32px 80px rgba(0,0,0,.7)',flexShrink:0}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'1rem 1.4rem',borderBottom:'1px solid #1e3650',position:'sticky',top:0,background:'#0b1520',zIndex:1,borderRadius:'18px 18px 0 0'}}>
+        <h3 style={{margin:0,color:'#e0f0fc',fontFamily:"'Cormorant Garamond',serif",fontSize:'1.05rem',fontWeight:700}}>{title}</h3>
+        <button onClick={onClose} style={{background:'none',border:'none',color:'#4a7090',cursor:'pointer',padding:6,display:'flex',borderRadius:6}}><Icon n="close" s={20}/></button>
+      </div>
+      <div style={{padding:'1.2rem 1.4rem',overflowY:'auto',maxHeight:'80vh'}}>{children}</div>
+    </div>
+  </div>
+);
+const Btn=({children,icon,ghost,sm,danger,success,onClick,full,disabled,style:sx})=>(
+  <button onClick={onClick} disabled={disabled}
+    style={{background:ghost?'transparent':danger?'#6b1515':success?'#0d4a2a':'#14508a',border:ghost?'1px solid #1e3650':'none',borderRadius:sm?7:10,padding:sm?'0.3rem 0.62rem':'0.56rem 1.1rem',color:ghost?'#5a80a0':'#fff',cursor:disabled?'not-allowed':'pointer',display:'inline-flex',alignItems:'center',gap:6,fontWeight:600,fontSize:sm?'0.77rem':'0.85rem',whiteSpace:'nowrap',width:full?'100%':undefined,justifyContent:full?'center':undefined,opacity:disabled?.5:1,transition:'all .15s',...sx}}>
+    {icon&&<Icon n={icon} s={sm?13:15}/>}{children}
+  </button>
+);
+const FI=({label,type='text',value,onChange,required,placeholder,readOnly})=>(
+  <div style={{marginBottom:'0.82rem'}}>
+    {label&&<label style={{display:'block',color:'#4a7090',fontSize:'.69rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:5}}>{label}{required&&' *'}</label>}
+    <input type={type} value={value||''} onChange={e=>onChange&&onChange(e.target.value)} placeholder={placeholder} readOnly={readOnly}
+      style={{width:'100%',background:readOnly?'#070e18':'#060c16',border:'1px solid #1e3650',borderRadius:8,padding:'.5rem .8rem',color:'#e0f0fc',outline:'none',boxSizing:'border-box',opacity:readOnly?.6:1}}/>
+  </div>
+);
+const FS=({label,value,onChange,options})=>(
+  <div style={{marginBottom:'0.82rem'}}>
+    {label&&<label style={{display:'block',color:'#4a7090',fontSize:'.69rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:5}}>{label}</label>}
+    <select value={value||''} onChange={e=>onChange(e.target.value)}
+      style={{width:'100%',background:'#060c16',border:'1px solid #1e3650',borderRadius:8,padding:'.5rem .8rem',color:'#e0f0fc',outline:'none',boxSizing:'border-box'}}>
+      {options.map(o=><option key={o.value??o} value={o.value??o}>{o.label??o}</option>)}
+    </select>
+  </div>
+);
+const FTA=({label,value,onChange,rows=3})=>(
+  <div style={{marginBottom:'0.82rem'}}>
+    {label&&<label style={{display:'block',color:'#4a7090',fontSize:'.69rem',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:5}}>{label}</label>}
+    <textarea value={value||''} onChange={e=>onChange(e.target.value)} rows={rows}
+      style={{width:'100%',background:'#060c16',border:'1px solid #1e3650',borderRadius:8,padding:'.5rem .8rem',color:'#e0f0fc',outline:'none',resize:'vertical',boxSizing:'border-box'}}/>
+  </div>
+);
+const Card=({children,style:sx,onClick})=>(
   <div onClick={onClick} style={{background:'#090f1a',border:'1px solid #1e3650',borderRadius:14,padding:'.95rem 1.15rem',cursor:onClick?'pointer':undefined,transition:'border-color .15s',...sx}}
     onMouseEnter={e=>{if(onClick)e.currentTarget.style.borderColor='#1460a0'}}
     onMouseLeave={e=>{if(onClick)e.currentTarget.style.borderColor='#1e3650'}}>
